@@ -9,6 +9,7 @@ from scipy.special import lpmv
 from mpl_toolkits.mplot3d import Axes3D
 from tkinter import messagebox
 from scipy.special import legendre
+from scipy.special import sph_harm
 
 
 # Function to open a new window for Button Infinite Square Well
@@ -788,7 +789,110 @@ def open_window_associated_legendre_poly():
     root.mainloop()
     #refer : https://www.mathworks.com/help/matlab/ref/legendre.html
     
-    
+
+def open_window_spherical_harmonics():
+	# Create the root window for Tkinter
+	root = tk.Tk()
+	root.title("Spherical Harmonics Plot")
+	root.state("zoomed")  # Start the window maximized
+	
+	# Parameters for the spherical harmonics
+	initial_m = 0  # Initial order
+	initial_l = 0  # Initial degree
+	
+	# Create the plot figure and the canvas for embedding it into Tkinter
+	fig = plt.figure(figsize=(8, 6))
+	ax = fig.add_subplot(111, projection='3d')
+	canvas = FigureCanvasTkAgg(fig, master=root)
+	
+	# Function to update the plot based on slider values
+	def update_spherical_harmonics(*args):
+	    m = int(slider_m.get())  # Ensure that slider_m is defined before this call
+	    l = int(slider_l.get())  # Ensure that slider_l is defined before this call
+	
+	    # Update the labels next to the s	liders	
+	    label_value_m.config(text=f"{m}")	
+	    label_value_l.config(text=f"{l}")	
+	    	
+	    if np.abs(m) > l:	
+	        messagebox.showwarning("Warning", "Absolute value of Order m cannot be greater than 	degree l!")
+	        root.update()  # Force the update of the messagebox window
+	        return  # Exit the function if the condition is invalid
+	
+	    try:
+	        # Clear the current plot
+	        ax.clear()
+	
+	        # Create a meshgrid for theta and phi
+	        theta = np.linspace(0, np.pi, 500)  # Polar angle (0 to pi)
+	        phi = np.linspace(0, 2 * np.pi, 500)  # Azimuthal angle (0 to 2pi)
+	        theta, phi = np.meshgrid(theta, phi)
+	
+	        # Calculate the spherical harmonics (Y_l^m(theta, phi))
+	        Y_lm = sph_harm(m, l, phi, theta)
+	
+	        # Convert spherical coordinates to Cartesian coordinates
+	        r = np.abs(Y_lm)  # Magnitude of the spherical harmonics
+	        x = r * np.sin(theta) * np.cos(phi)
+	        y = r * np.sin(theta) * np.sin(phi)
+	        z = r * np.cos(theta)
+	
+	        # Plotting the 3D surface
+	        ax.plot_surface(x, y, z, facecolors=plt.cm.viridis(r / r.max()), edgecolor='none')
+	
+	        # Set plot labels and title
+	        ax.set_xlabel('X')
+	        ax.set_ylabel('Y')
+	        ax.set_zlabel('Z')
+	        ax.set_title(f'Spherical Harmonics (Y_{l}^{m})')
+	
+	        # Redraw the canvas
+	        canvas.draw()
+	
+	    except Exception as e:
+	        messagebox.showerror("Error", f"An error occurred while plotting: {e}")
+	        print(f"Error: {e}")
+	
+	# Frame to hold sliders and labels
+	frame_sliders = ttk.Frame(root)
+	frame_sliders.pack(side=tk.BOTTOM, fill=tk.X, padx=20, pady=10)
+	
+	# Label for l slider (Degree)
+	label_l = ttk.Label(frame_sliders, text="Degree (l):")
+	label_l.pack(side=tk.LEFT, padx=(0, 10))
+	
+	# Slider for l (integer steps)	
+	slider_l = ttk.Scale(frame_sliders, from_=0, to=10, orient=tk.HORIZONTAL, length=400, 	command=update_spherical_harmonics)
+	slider_l.set(initial_l)
+	slider_l.pack(side=tk.LEFT, padx=(0, 10))
+	
+	# Dynamic label to display selected value of l
+	label_value_l = ttk.Label(frame_sliders, text=f"{initial_l}")
+	label_value_l.pack(side=tk.LEFT)
+	
+	# Label for m slider (Order)
+	label_m = ttk.Label(frame_sliders, text="Order (m):")
+	label_m.pack(side=tk.LEFT, padx=(20, 10))
+	
+	# Slider for m (integer steps)	
+	slider_m = ttk.Scale(frame_sliders, from_=-10, to=10, orient=tk.HORIZONTAL, length=400, 	command=update_spherical_harmonics)
+	slider_m.set(initial_m)
+	slider_m.pack(side=tk.LEFT, padx=(0, 10))
+	
+	# Dynamic label to display selected value of m
+	label_value_m = ttk.Label(frame_sliders, text=f"{initial_m}")
+	label_value_m.pack(side=tk.LEFT)
+	
+	# Embed the plot canvas into the Tkinter window
+	canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+	
+	# Initial plot
+	update_spherical_harmonics()
+	
+	# Start the Tkinter event loop
+	root.mainloop()
+
+##########################################################################################
     
 # Main application window
 root = tk.Tk()
@@ -814,6 +918,9 @@ button_e.pack(pady=20, ipadx=20, ipady=10)
 
 button_f = ttk.Button(root, text="Associated Legendre Polynomials", width=40, command=open_window_associated_legendre_poly)
 button_f.pack(pady=20, ipadx=20, ipady=10)
+
+button_g = ttk.Button(root, text="Spherical Harmonics", width=40, command=open_window_spherical_harmonics)
+button_g.pack(pady=20, ipadx=20, ipady=10)
 
 # Start the tkinter event loop
 root.mainloop()
