@@ -7,7 +7,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import math
 from scipy.special import lpmv
 from mpl_toolkits.mplot3d import Axes3D
-from tkinter import ttk, messagebox
+from tkinter import messagebox
 from scipy.special import legendre
 
 
@@ -127,7 +127,7 @@ def open_window_infinitesquarewell():
     label_n.pack(side=tk.LEFT, padx=(0,10))
     
     #slider for quantum number n
-    slider_n=ttk.Scale(frame_sliders, from_=1, to=10, orient=tk.HORIZONTAL, command=lambda val: update_infinitesquarewell())
+    slider_n=ttk.Scale(frame_sliders, from_=1, to=10, orient=tk.HORIZONTAL,length=500, command=lambda val: update_infinitesquarewell())
     slider_n.set(initial_n)
     slider_n.pack(side=tk.LEFT, padx=(0,10))
     
@@ -143,7 +143,7 @@ def open_window_infinitesquarewell():
     label_L.pack(side=tk.LEFT, padx=(0,10))
     
     #slider for well width L
-    slider_L=ttk.Scale(frame_sliders, from_=0.1, to=10.0, orient=tk.HORIZONTAL, command=lambda val: update_infinitesquarewell())
+    slider_L=ttk.Scale(frame_sliders, from_=0.1, to=10.0, orient=tk.HORIZONTAL,length=500, command=lambda val: update_infinitesquarewell())
     slider_L.set(initial_L_nm)
     slider_L.pack(side=tk.LEFT, padx=(0,5))
     
@@ -292,7 +292,7 @@ def open_window_HO():
     label_n.pack(side=tk.LEFT, padx=(0, 10))
     
     # Slider for quantum number n
-    slider_n = ttk.Scale(frame_sliders, from_=0, to=16, orient=tk.HORIZONTAL, command=lambda val: update_HO())
+    slider_n = ttk.Scale(frame_sliders, from_=0, to=16, orient=tk.HORIZONTAL,length=500, command=lambda val: update_HO())
     slider_n.set(initial_n)
     slider_n.pack(side=tk.LEFT, padx=(0, 10))
     
@@ -416,7 +416,7 @@ def open_window_delta_dirac_2D():
     label_n.pack(side=tk.LEFT, padx=(0, 10))
     
     # Slider for constant a
-    slider_n = ttk.Scale(frame_sliders, from_=0, to=100, orient=tk.HORIZONTAL, command=lambda val:     update_Dirac())    
+    slider_n = ttk.Scale(frame_sliders, from_=0, to=100, orient=tk.HORIZONTAL,length=500, command=lambda val:     update_Dirac())    
     slider_n.set(initial_a)    
     slider_n.pack(side=tk.LEFT, padx=(0, 10))    
     
@@ -553,7 +553,7 @@ def open_window_delta_scatter():
     label_a.pack(side=tk.LEFT, padx=(0, 10))
     
     # Slider for constant 'a'
-    slider_a = ttk.Scale(frame_sliders, from_=0.1, to=20.0, orient=tk.HORIZONTAL, command=lambda val: update_Dirac())
+    slider_a = ttk.Scale(frame_sliders, from_=0.1, to=20.0, orient=tk.HORIZONTAL,length=500, command=lambda val: update_Dirac())
     slider_a.set(initial_a)
     slider_a.pack(side=tk.LEFT, padx=(0, 10))
     
@@ -568,7 +568,7 @@ def open_window_delta_scatter():
     label_E.pack(side=tk.LEFT, padx=(0, 10))
     
     # Slider for energy 'E'
-    slider_E = ttk.Scale(frame_sliders, from_=0.1, to=20.0, orient=tk.HORIZONTAL, command=lambda val: update_Dirac())
+    slider_E = ttk.Scale(frame_sliders, from_=0.1, to=20.0, orient=tk.HORIZONTAL,length=500, command=lambda val: update_Dirac())
     slider_E.set(initial_E)
     slider_E.pack(side=tk.LEFT, padx=(0, 10))
     
@@ -656,7 +656,7 @@ def open_window_legendre_poly():
     label_n.pack(side=tk.LEFT, padx=(0, 10))
     
     # Slider for quantum number n
-    slider_n = ttk.Scale(frame_sliders, from_=0, to=1000, orient=tk.HORIZONTAL, command=lambda val: update_legendre())
+    slider_n = ttk.Scale(frame_sliders, from_=0, to=1000, orient=tk.HORIZONTAL,length=500, command=lambda val: update_legendre())
     slider_n.set(initial_n)
     slider_n.pack(side=tk.LEFT, padx=(0, 10))
     
@@ -749,14 +749,14 @@ def open_window_associated_legendre_poly():
     
     # Frame to hold sliders and labels
     frame_sliders = ttk.Frame(root)
-    frame_sliders.pack(side=tk.TOP, fill=tk.X, padx=20, pady=10)
+    frame_sliders.pack(side=tk.BOTTOM, fill=tk.X, padx=20, pady=10)
     
     # Label for m slider (Order)
-    label_l = ttk.Label(frame_sliders, text=":Degree (l):")
+    label_l = ttk.Label(frame_sliders, text="Degree (l):")
     label_l.pack(side=tk.LEFT, padx=(0, 10))
     
     # Slider for m (integer steps)
-    slider_l = ttk.Scale(frame_sliders, from_=0, to=20, orient=tk.HORIZONTAL, length=400, command=update_associated_poly)
+    slider_l = ttk.Scale(frame_sliders, from_=0, to=20, orient=tk.HORIZONTAL,length=500, command=update_associated_poly)
     slider_l.set(initial_m)
     slider_l.pack(side=tk.LEFT, padx=(0, 10))
     
@@ -769,7 +769,7 @@ def open_window_associated_legendre_poly():
     label_m.pack(side=tk.LEFT, padx=(20, 10))
     
     # Slider for l (integer steps)
-    slider_m = ttk.Scale(frame_sliders, from_=-20, to=20, orient=tk.HORIZONTAL, length=400, command=update_associated_poly)
+    slider_m = ttk.Scale(frame_sliders, from_=-20, to=20, orient=tk.HORIZONTAL,length=500, command=update_associated_poly)
     slider_m.set(initial_l)
     slider_m.pack(side=tk.LEFT, padx=(0, 10))
     
