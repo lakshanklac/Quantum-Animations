@@ -797,23 +797,23 @@ root.title("Quantum Animations")
 root.state('zoomed')
 
 # Create buttons
-button_a = ttk.Button(root, text="Infinite Square Well", command=open_window_infinitesquarewell)
-button_a.pack(pady=20)
+button_a = ttk.Button(root, text="Infinite Square Well", width=40, command=open_window_infinitesquarewell)
+button_a.pack(pady=20, ipadx=20, ipady=10)
 
-button_b = ttk.Button(root, text="Harmonic Oscialltor", command=open_window_HO)
-button_b.pack(pady=20)
+button_b = ttk.Button(root, text="Harmonic Oscialltor", width=40, command=open_window_HO)
+button_b.pack(pady=20, ipadx=20, ipady=10)
 
-button_c = ttk.Button(root, text="Delta Dirac Potential Well Bound State", command=open_window_delta_dirac_2D)
-button_c.pack(pady=20)
+button_c = ttk.Button(root, text="Delta Dirac Potential Well Bound State",width=40, command=open_window_delta_dirac_2D)
+button_c.pack(pady=20, ipadx=20, ipady=10)
 
-button_d = ttk.Button(root, text="Delta Dirac Potential Well Scattering State", command=open_window_delta_scatter)
-button_d.pack(pady=20)
+button_d = ttk.Button(root, text="Delta Dirac Potential Well Scattering State", width=40, command=open_window_delta_scatter)
+button_d.pack(pady=20, ipadx=20, ipady=10)
 
-button_e = ttk.Button(root, text="Legendre Polynomials", command=open_window_legendre_poly)
-button_e.pack(pady=20)
+button_e = ttk.Button(root, text="Legendre Polynomials", width=40, command=open_window_legendre_poly)
+button_e.pack(pady=20, ipadx=20, ipady=10)
 
-button_f = ttk.Button(root, text="Associated Legendre Polynomials", command=open_window_associated_legendre_poly)
-button_f.pack(pady=20)
+button_f = ttk.Button(root, text="Associated Legendre Polynomials", width=40, command=open_window_associated_legendre_poly)
+button_f.pack(pady=20, ipadx=20, ipady=10)
 
 # Start the tkinter event loop
 root.mainloop()
