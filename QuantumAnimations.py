@@ -2,13 +2,17 @@ import tkinter as tk
 from tkinter import ttk
 import numpy as np
 import matplotlib.pyplot as plt
-import tkinter as tk
-import math
 from scipy.special import hermite
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import math
+from scipy.special import lpmv
+from mpl_toolkits.mplot3d import Axes3D
+from tkinter import ttk, messagebox
+from scipy.special import legendre
 
-# Function to open a new window for Button A
-def open_window_a():
+
+# Function to open a new window for Button Infinite Square Well
+def open_window_infinitesquarewell():
     #constants
     hbar=1.054571817e-34 #reduced Planck's constant,J·s
     me=9.10938356e-31 #mass of an electron,kg
@@ -19,40 +23,39 @@ def open_window_a():
     initial_L_nm=1.0 #initial well width in nm
     
     #Convert initial_L to meters
-    initial_L=initial_L_nm * 1e-9  #meters
+    #initial_L=initial_L_nm * 1e-9  #meters
     
-    #Spatial grid parameters
-    N=10000  #Number of spatial points
+    N=1000  #Number of spatial points
     
     
-    #function to calculate wavefunction_infinitesquarewell
+    # Function to calculate wavefunction_infinitesquarewell
     def wavefunction_infinitesquarewell(n, x, L):
         y=np.sqrt(2 / L) * np.sin(n * np.pi * x / L)
         return y
     
-    #function to calculate energy_infinitesquarewell
+    # Function to calculate energy_infinitesquarewell
     def energy_infinitesquarewell(n, L):
         EJ=(n**2 * (np.pi**2) * (hbar**2)) / (2 * me * (L**2))
         EeV=EJ / eV
         return EJ, EeV
     
     
-    #create the main window
+    # Create the main window
     root=tk.Tk()
-    root.title("Infinite Square Well wavefunction_infinitesquarewell Explorer")
+    root.title("Infinite Square Well")
     root.state('zoomed')
     
-    #create figures
+    # Create figures
     fig, (plotwave, plotdensity)=plt.subplots(2, 1, figsize=(8, 6))
     
-    #gap between two plots
+    # Gap between two plots
     plt.tight_layout(pad=3.0)
     
     canvas=FigureCanvasTkAgg(fig, master=root)
     canvas.draw()
     canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
     
-    #function to update_infinitesquarewell through the sliders
+    # Function to update_infinitesquarewell through the sliders
     def update_infinitesquarewell():
         #get current values from sliders
         n=int(round(slider_n.get()))
@@ -60,22 +63,23 @@ def open_window_a():
         L=L_nm * 1e-9
     
      
-        x=np.linspace(0, L, N)  #meters
+        x=np.linspace(0, L, N)
     
         psi_n=wavefunction_infinitesquarewell(n, x, L)
         prob_density=psi_n**2
     
-        #re-calculate energy_infinitesquarewell
+        # Re-calculate energy_infinitesquarewell
         EJ, EeV=energy_infinitesquarewell(n, L)
     
         #clear previous plots
         plotwave.cla()
         plotdensity.cla()
     
+        L=float(L)
         #plot wavefunction_infinitesquarewell
         plotwave.plot(x * 1e9, psi_n, color='blue', label=f'n={n}')
-        plotwave.set_title("wavefunction_infinitesquarewell in Infinite Square Well")
-        plotwave.set_xlabel("Position x (nm)")
+        plotwave.set_title(f"Wavefunction of Infinite Square Well for (n={n}) and (L={L:.2e})")
+        plotwave.set_xlabel("x (nm)")
         plotwave.set_ylabel(r'$\psi_n(x)$')
         plotwave.grid(True)
         plotwave.axvline(x=0, color='black', linestyle='--')
@@ -83,14 +87,14 @@ def open_window_a():
         plotwave.legend()
         
         #thicken the x=0 axis and y=0 axis for the wavefunction_infinitesquarewell plot
-        plotwave.axvline(x=0, color='black', linestyle='--', linewidth=2)  # x=0
-        plotwave.axhline(y=0, color='black', linewidth=2)  # y=0
+        plotwave.axvline(x=0, color='black', linestyle='--')  # x=0
+        plotwave.axhline(y=0, color='black', linestyle='--')  # y=0
         plotwave.axvline(x=L * 1e9, color='black', linestyle='--')
     
         #plot probability density
         plotdensity.plot(x * 1e9, prob_density, color='red', label=f'n={n}')
-        plotdensity.set_title("Probability Density in Infinite Square Well")
-        plotdensity.set_xlabel("Position x (nm)")
+        plotdensity.set_title(f'Probability Density of Infinite Square Well for (n={n}) and (L={float(L):.2e})')
+        plotdensity.set_xlabel("x (nm)")
         plotdensity.set_ylabel(r'$|\psi_n(x)|^2$')
         plotdensity.grid(True)
         plotdensity.axvline(x=0, color='black', linestyle='--')
@@ -98,13 +102,13 @@ def open_window_a():
         plotdensity.legend()
         
         #thicken the x=0 axis and y=0 axis for the probability density plot
-        plotdensity.axvline(x=0, color='black', linestyle='--', linewidth=2)  # x=0
-        plotdensity.axhline(y=0, color='black', linewidth=2)  # y=0
+        plotdensity.axvline(x=0, color='black', linestyle='--')  # x=0
+        plotdensity.axhline(y=0, color='black', linestyle='--')  # y=0
         plotdensity.axvline(x=L * 1e9, color='black', linestyle='--')
     
     
         #update_infinitesquarewell energy_infinitesquarewell label
-        label_energy_infinitesquarewell.config(text=f"energy_infinitesquarewell Level E={EeV:.5f} eV")
+        label_energy_infinitesquarewell.config(text=f"Energy of Level n={n:.0f} Level E={EeV:.3f} eV")
     
         #update_infinitesquarewell current n and L labels
         current_n.set(f"n={n}")
@@ -135,7 +139,7 @@ def open_window_a():
     
     
     #label for well width slider
-    label_L=ttk.Label(frame_sliders, text="Well Width (L) [nm]:")
+    label_L=ttk.Label(frame_sliders, text="Well Width (L) (nm):")
     label_L.pack(side=tk.LEFT, padx=(0,10))
     
     #slider for well width L
@@ -178,7 +182,7 @@ def open_window_a():
  
 
 # Function to open a new window for Button B
-def open_window_b():
+def open_window_HO():
     #constants
     hbar = 1.0  
     m = 1.0     
@@ -240,25 +244,38 @@ def open_window_b():
         # Plot wavefunction
         ax_wave.plot(x, psi_n, label=f"Wavefunction (n={n})", color='blue')
         ax_wave.set_title(f"Wavefunction for Quantum Harmonic Oscillator (n={n})")
-        ax_wave.set_xlabel("Position x (arbitrary units)")
+        ax_wave.set_xlabel("x (arbitrary units)")
         ax_wave.set_ylabel(r'$\psi_n(x)$')
-        ax_wave.axvline(x=0, color='black', linewidth=2, linestyle='--')  # Thicken x=0 axis
-        ax_wave.axhline(y=0, color='black', linewidth=2, linestyle='--')  # Thicken y=0 axis
+        ax_wave.axvline(x=-4, color='r',linestyle='--')
+        ax_wave.axvline(x=-2, color='black',linestyle='--')
+        ax_wave.axhline(y=0, color='black',linestyle='--')# Thicken x=0 axis
+        ax_wave.axvline(x=2, color='black', linestyle='--')  # Thicken y=0 axis
+        ax_wave.axvline(x=4, color='r',linestyle='--')
         ax_wave.grid(True)
         ax_wave.legend()
+        
+ 
         
         # Plot probability density
         ax_prob.plot(x, prob_density, label=f"Probability Density (n={n})", color='red')
         ax_prob.set_title(f"Probability Density for Quantum Harmonic Oscillator (n={n})")
         ax_prob.set_xlabel("Position x (arbitrary units)")
         ax_prob.set_ylabel(r'$|\psi_n(x)|^2$')
-        ax_prob.axvline(x=0, color='black', linewidth=2, linestyle='--')  # Thicken x=0 axis
-        ax_prob.axhline(y=0, color='black', linewidth=2, linestyle='--')  # Thicken y=0 axis
+        ax_prob.axvline(x=-4, color='b',  linestyle='--')
+        ax_prob.axvline(x=-2, color='black',  linestyle='--')  # Thicken x=0 axis
+        ax_prob.axhline(y=0, color='black',  linestyle='--')
+        ax_prob.axvline(x=2, color='black', linestyle='--')
+        ax_prob.axvline(x=4, color='b', linestyle='--')# Thicken y=0 axis
         ax_prob.grid(True)
         ax_prob.legend()
         
+        energy_factor=(n+0.5)
         # Update energy label
-        label_energy.config(text=f"Energy Level Eₙ = {EeV:.5f} eV")
+        hbar_symbol = '\u210F'  # Unicode for ħ
+        omega_symbol = '\u03C9'  # Unicode for ω (omega)
+        label_energy.config(text=f"Energy Level E_{n:.0f} = {energy_factor:.2f} * {hbar_symbol} * {omega_symbol}")
+
+
         
         # Update current n label
         current_n.set(f"n = {n}")
@@ -290,8 +307,8 @@ def open_window_b():
     frame_energy.pack(side=tk.TOP, fill=tk.X, padx=20, pady=10)
     
     # Label to display energy
-    label_energy_text = ttk.Label(frame_energy, text="Energy Level E = ", font=("Arial", 14))
-    label_energy_text.pack(side=tk.LEFT)
+    #label_energy_text = ttk.Label(frame_energy, text="Energy Level E = ", font=("Arial", 14))
+    #label_energy_text.pack(side=tk.LEFT)
     
     label_energy = ttk.Label(frame_energy, text="", font=("Arial", 14, "bold"))
     label_energy.pack(side=tk.LEFT)
@@ -315,11 +332,6 @@ def open_window_b():
     root.mainloop()
     
 def open_window_delta_dirac_2D():
-    import numpy as np
-    import matplotlib.pyplot as plt
-    import tkinter as tk
-    from tkinter import ttk
-    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
     
     hbar = 1  # reduced Planck's constant, J·s
     me = 1    # mass of an electron, kg
@@ -369,16 +381,23 @@ def open_window_delta_dirac_2D():
     
         # Clear previous plots
         plot_dirac.cla()
-    
+        
+        alpha_symbol = '\u03B1'  # Unicode for alpha
+
+        # Plot both potential and wavefunction in the same graph
+        alpha_symbol = '\u03B1'  # Unicode for alpha
+
         # Plot both potential and wavefunction in the same graph
         plot_dirac.plot(x, mag, linestyle=':', color='b', lw=2, label='Magnitude of Potential')
-        plot_dirac.plot(x, potential, color='r', lw=2, label=r'$V(x) = -a*\delta(x)$')
-        plot_dirac.plot(x, psi_n, color='g', lw=2, label=r'$y = B e^{-|x|}$')
+        plot_dirac.plot(x, potential, color='r', lw=2, label=fr'$V(x) = -{alpha_symbol}*\delta(x)$')
+        plot_dirac.plot(x, psi_n, color='g', lw=2, label=fr'$y = \sqrt{{m{alpha_symbol}}}/{{\hbar}} {alpha_symbol} e^{{-\left(\frac{{m{alpha_symbol}}}{{\hbar^2}}\right)|x|}}$')
+                                    
+    
     
         # Set titles and labels
-        plot_dirac.set_title('Delta Function Potential and Exponential Decay')
-        plot_dirac.set_xlabel('Position x (arbitrary units)')
-        plot_dirac.set_ylabel('y, V(x)')
+        plot_dirac.set_title('Bound State Wave Function of Delta Function Potential Well')
+        plot_dirac.set_xlabel('x (arbitrary units)')
+        plot_dirac.set_ylabel(r"$\psi(x)$ , $V(x)$")
         plot_dirac.legend()
         plot_dirac.grid(True)
     
@@ -423,23 +442,378 @@ def open_window_delta_dirac_2D():
     # Start the Tkinter event loop
     root.mainloop()    
     
+def open_window_delta_scatter():
+    hbar = 1  # reduced Planck's constant, J·s
+    me = 1    # mass of an electron, kg
     
+    N = 1000  # Number of points for plotting
+    initial_a = 10
+    initial_E = 10
+    
+    # Define the delta function approximation (non-normalized)
+    def delta_approx(x, epsilon=0.01, a=1):
+        delta = np.exp(-x**2 / (2 * epsilon**2))  # No normalization; just the raw exponential form
+        V = -a * delta  # Scale the delta function by 'a'
+        return V
+    
+    # Calculate the wavefunction for scattering states
+    def calculate_wavefunctions(a, E):
+        k = np.sqrt(2 * E)  # wavevector from energy
+        beta = a / np.sqrt(2 * E)  # scattering strength related to the delta potential
+    
+        # Define regions for x < 0 and x > 0
+        x_neg = np.linspace(-10, 0, N//2)
+        x_pos = np.linspace(0, 10, N//2)
+    
+        A = 1
+        B = 1j * beta * A / (1 - 1j * beta)
+        F = A / (1 - 1j * beta)
+    
+        # Compute the wavefunctions for x < 0 and x > 0
+        psi_A = A * np.exp(1j * k * x_neg)
+        psi_B = B * np.exp(-1j * k * x_neg)
+        psi_F = F * np.exp(1j * k * x_pos)
+    
+        return x_neg, x_pos, psi_A, psi_B, psi_F
+    
+    # Create the main window
+    root = tk.Tk()
+    root.title("Scattering State of Dirac Delta Potential")
+    root.state('zoomed')
+    
+    # Create a single figure for both plots
+    fig, plot_dirac = plt.subplots(figsize=(8, 6))
+    
+    # Adjust layout for better spacing
+    plt.tight_layout(pad=3.0)
+    
+    def update_Dirac():
+        # Get current 'a' and 'E' from the sliders
+        a = float(slider_a.get())
+        E = float(slider_E.get())
+    
+        # Define the x range and potential
+        x = np.linspace(-10, 10, N)
+        potential = delta_approx(x, a=a)  # Update the potential with 'a'
+        mag = -potential
+    
+        # Get the updated wavefunctions based on 'a' and 'E'
+        x_neg, x_pos, psi_A, psi_B, psi_F = calculate_wavefunctions(a, E)
+    
+        # Clear previous plots
+        plot_dirac.cla()
+    
+        # Calculate Reflection (R) and Transmission (T) coefficients
+        gamma = 2 * hbar**2 * E / (me * a**2)
+        R = 1 / (1 + gamma)  # Reflection coefficient
+        T = 1 - R            # Transmission coefficient (for conservation of probability)
+    
+        # Plot the delta potential
+        plot_dirac.plot(x, mag, linestyle=':', color='b', lw=2, label='Magnitude of Potential')
+        plot_dirac.plot(x, potential, color='r', lw=2, label=r'$V(x) = -a*\delta(x)$')
+    
+        # Plot the reflection and transmission as constant lines
+        plot_dirac.axhline(y=R, linestyle='--', color='cyan', label='R (Reflection Coefficient)')
+        plot_dirac.axhline(y=T, linestyle='--', color='darkblue', label='T (Transmission Coefficient)')
+    
+        # Add text annotations for R and T
+        plot_dirac.text(0, R, f'R = {R:.4f}', fontsize=10, color='cyan', ha='left')
+        plot_dirac.text(0, T, f'T = {T:.4f}', fontsize=10, color='darkblue', ha='left')
+    
+        # Plot the scattering wavefunctions
+        plot_dirac.plot(x_neg, np.imag(psi_A), label=r"Im($\psi_A(x)$) for $x < 0$", color="b")
+        plot_dirac.plot(x_neg, np.imag(psi_B), label=r"Im($\psi_B(x)$) for $x < 0$", color="r", linestyle="--")
+        plot_dirac.plot(x_pos, np.imag(psi_F), label=r"Im($\psi_F(x)$) for $x > 0$", color="orange", linestyle="--")
+    
+        # Set titles and labels
+        plot_dirac.set_title('Scattering State of Dirac Delta Potential')
+        plot_dirac.set_xlabel('Position x (arbitrary units)')
+        plot_dirac.set_ylabel(r"$\psi(x)$ and $V(x)$")
+        plot_dirac.legend()
+        plot_dirac.grid(True)
+    
+        # Update current 'a' and 'E' labels
+        current_a.set(f"a = {a:.2f}")
+        current_E.set(f"E = {E:.2f}")
+    
+        # Redraw the canvas to show updates
+        canvas.draw()
+    
+    # Embed the figure into the Tkinter window
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+    
+    # Frame to hold sliders and labels
+    frame_sliders = ttk.Frame(root)
+    frame_sliders.pack(side=tk.TOP, fill=tk.X, padx=20, pady=10)
+    
+    # Label for constant 'a' slider
+    label_a = ttk.Label(frame_sliders, text="Potential strength (a):")
+    label_a.pack(side=tk.LEFT, padx=(0, 10))
+    
+    # Slider for constant 'a'
+    slider_a = ttk.Scale(frame_sliders, from_=0.1, to=20.0, orient=tk.HORIZONTAL, command=lambda val: update_Dirac())
+    slider_a.set(initial_a)
+    slider_a.pack(side=tk.LEFT, padx=(0, 10))
+    
+    # Display current 'a'
+    current_a = tk.StringVar()
+    current_a.set(f"a = {initial_a:.2f}")
+    label_current_a = ttk.Label(frame_sliders, textvariable=current_a)
+    label_current_a.pack(side=tk.LEFT, padx=(0, 20))
+    
+    # Label for energy 'E' slider
+    label_E = ttk.Label(frame_sliders, text="Energy (E):")
+    label_E.pack(side=tk.LEFT, padx=(0, 10))
+    
+    # Slider for energy 'E'
+    slider_E = ttk.Scale(frame_sliders, from_=0.1, to=20.0, orient=tk.HORIZONTAL, command=lambda val: update_Dirac())
+    slider_E.set(initial_E)
+    slider_E.pack(side=tk.LEFT, padx=(0, 10))
+    
+    # Display current 'E'
+    current_E = tk.StringVar()
+    current_E.set(f"E = {initial_E:.2f}")
+    label_current_E = ttk.Label(frame_sliders, textvariable=current_E)
+    label_current_E.pack(side=tk.LEFT, padx=(0, 20))
+    
+    # Function to update when slider is moved and released
+    def slidermove_dirac(event):
+        update_Dirac()
+    
+    # Bind the sliders to the callback function
+    slider_a.bind("<ButtonRelease-1>", slidermove_dirac)
+    slider_E.bind("<ButtonRelease-1>", slidermove_dirac)
+    
+    # Initial plot
+    update_Dirac()
+    
+    # Start the Tkinter event loop
+    root.mainloop()
+
+def open_window_legendre_poly():    
+    
+    # Create the main window
+    root = tk.Tk()
+    root.title("Legendre Polynomials")
+    root.state('zoomed')
+    
+    # Create figures with two subplots
+    fig, (ply) = plt.subplots(figsize=(8, 6))
+    
+    # Gap between two plots
+    plt.tight_layout(pad=3.0)
+    
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+    
+    initial_n = 0
+    
+    # Function to update the Legendre polynomial plot through the sliders
+    def update_legendre():
+        # Get current values from sliders
+        n = int(round(slider_n.get()))
+        x = np.linspace(-1, 1, 4000)
+    
+        # Clear previous plots
+        ply.cla()        # Clear the first subplot for Legendre polynomial
+    
+        P_n = legendre(n)
+    
+        # Evaluate P_n on the x values
+        y = P_n(x)
+    
+        # Plot the polynomial on the specified axes
+        ply.plot(x, y, label=f'(l={n})', lw=2)
+    
+    
+        # Setting labels and title for the first plot
+        ply.set_xlabel('x')
+        ply.set_ylabel('P_l')
+        ply.set_title('Legendre Polynomials')
+        ply.axhline(0, color='black', lw=0.5, ls='--')
+        ply.axhline(y=0, color='black',ls='--')
+        ply.axvline(0, color='black', lw=0.5, ls='--')
+        ply.grid(True)
+        ply.legend()
+    
+    
+        
+        # Update current n label
+        current_n.set(f"n={n}")
+    
+        # Redraw the canvas to show updates
+        canvas.draw()
+    
+    # Frame to hold sliders
+    frame_sliders = ttk.Frame(root)
+    frame_sliders.pack(side=tk.TOP, fill=tk.X, padx=20, pady=10)
+    
+    # Label for quantum number slider
+    label_n = ttk.Label(frame_sliders, text="Azimuthal Quantum Number (l):")
+    label_n.pack(side=tk.LEFT, padx=(0, 10))
+    
+    # Slider for quantum number n
+    slider_n = ttk.Scale(frame_sliders, from_=0, to=1000, orient=tk.HORIZONTAL, command=lambda val: update_legendre())
+    slider_n.set(initial_n)
+    slider_n.pack(side=tk.LEFT, padx=(0, 10))
+    
+    # Display current n
+    current_n = tk.StringVar()
+    label_current_n = ttk.Label(frame_sliders, textvariable=current_n)
+    label_current_n.pack(side=tk.LEFT, padx=(0, 20))
+    
+    # Function to update when sliders are moving
+    def slidermove_legendrepoly(event):
+        # Update current_n label
+        n = int(round(slider_n.get()))
+        current_n.set(f"n={n}")
+        
+        # Update plots
+        update_legendre()
+    
+    # Bind the sliders to the callback function
+    slider_n.bind("<ButtonRelease-1>", slidermove_legendrepoly)
+    
+    # Initial plot
+    update_legendre()
+    
+    # Start the Tkinter event loop
+    root.mainloop()
+
+def open_window_associated_legendre_poly():  
+
+    
+    # Create the root window for Tkinter
+    root = tk.Tk()
+    root.title("Associated Legendre Polynomial")
+    root.state("zoomed")  # Start the window maximized
+    
+    # Parameters for the associated Legendre polynomial
+    initial_m = 0  # Initial order
+    initial_l = 0  # Initial degree
+    
+    # Create the plot figure
+    fig = plt.figure(figsize=(8, 6))
+    ax = fig.add_subplot(111, projection='3d')
+    
+    # Function to update the plot based on slider values
+    def update_associated_poly(*args):
+        m = int(slider_m.get())
+        l = int(slider_l.get())
+        
+        # Update the labels next to the sliders
+        label_value_m.config(text=f"{m}")
+        label_value_l.config(text=f"{l}")
+        
+        if np.abs(m) > l:
+            messagebox.showwarning("Warning", "Absolute Value of Order m cannot be greater than degree l!")
+            root.update()  # Force the update of the messagebox window
+            return  # Exit the function if the condition is invalid
+    
+        try:
+            # Clear the current plot
+            ax.clear()
+    
+            # Create a meshgrid for theta and phi
+            theta = np.linspace(0, np.pi, 500)  # Polar angle (0 to pi)
+            phi = np.linspace(0, 2 * np.pi, 500)  # Azimuthal angle (0 to 2pi)
+            theta, phi = np.meshgrid(theta, phi)
+    
+            # Calculate the associated Legendre polynomial P^m_n(cos(theta))
+            P_m_n = lpmv(m, l, np.cos(theta))
+    
+            # Convert spherical coordinates to Cartesian coordinates
+            r = np.abs(P_m_n)  # Using the absolute value of the polynomial as the radial distance
+            x = r * np.sin(theta) * np.cos(phi)
+            y = r * np.sin(theta) * np.sin(phi)
+            z = r * np.cos(theta)
+    
+            # Plotting the 3D surface
+            ax.plot_surface(x, y, z, cmap='viridis', edgecolor='none')
+    
+            # Set plot labels and title
+            ax.set_xlabel('X')
+            ax.set_ylabel('Y')
+            ax.set_zlabel('Z')
+            ax.set_title(f'3D Plot of Associated Legendre Polynomial of m={m} and l={l}')
+    
+            # Redraw the canvas
+            canvas.draw()
+    
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred while plotting: {e}")
+            print(f"Error: {e}")
+    
+    # Frame to hold sliders and labels
+    frame_sliders = ttk.Frame(root)
+    frame_sliders.pack(side=tk.TOP, fill=tk.X, padx=20, pady=10)
+    
+    # Label for m slider (Order)
+    label_l = ttk.Label(frame_sliders, text=":Degree (l):")
+    label_l.pack(side=tk.LEFT, padx=(0, 10))
+    
+    # Slider for m (integer steps)
+    slider_l = ttk.Scale(frame_sliders, from_=0, to=20, orient=tk.HORIZONTAL, length=400, command=update_associated_poly)
+    slider_l.set(initial_m)
+    slider_l.pack(side=tk.LEFT, padx=(0, 10))
+    
+    # Dynamic label to display selected value of m
+    label_value_l = ttk.Label(frame_sliders, text=f"{initial_l}")
+    label_value_l.pack(side=tk.LEFT)
+    
+    # Label for l slider (Degree)
+    label_m = ttk.Label(frame_sliders, text="Order (m)")
+    label_m.pack(side=tk.LEFT, padx=(20, 10))
+    
+    # Slider for l (integer steps)
+    slider_m = ttk.Scale(frame_sliders, from_=-20, to=20, orient=tk.HORIZONTAL, length=400, command=update_associated_poly)
+    slider_m.set(initial_l)
+    slider_m.pack(side=tk.LEFT, padx=(0, 10))
+    
+    # Dynamic label to display selected value of l
+    label_value_m = ttk.Label(frame_sliders, text=f"{initial_m}")
+    label_value_m.pack(side=tk.LEFT)
+    
+    # Create a canvas to embed the plot in the Tkinter window
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+    
+    # Initial plot
+    update_associated_poly()
+    
+    # Start the Tkinter event loop
+    root.mainloop()
+    #refer : https://www.mathworks.com/help/matlab/ref/legendre.html
     
     
     
 # Main application window
 root = tk.Tk()
-root.title("Main Window")
-root.geometry("300x200")
+root.title("Quantum Animations")
+#root.geometry("300x200")
+root.state('zoomed')
 
-# Create buttons for A and B
-button_a = ttk.Button(root, text="Button A", command=open_window_a)
+# Create buttons
+button_a = ttk.Button(root, text="Infinite Square Well", command=open_window_infinitesquarewell)
 button_a.pack(pady=20)
 
-button_b = ttk.Button(root, text="Button B", command=open_window_b)
+button_b = ttk.Button(root, text="Harmonic Oscialltor", command=open_window_HO)
 button_b.pack(pady=20)
 
-button_c = ttk.Button(root, text="Delta Dirac Potential Well 2D", command=open_window_delta_dirac_2D)
+button_c = ttk.Button(root, text="Delta Dirac Potential Well Bound State", command=open_window_delta_dirac_2D)
 button_c.pack(pady=20)
+
+button_d = ttk.Button(root, text="Delta Dirac Potential Well Scattering State", command=open_window_delta_scatter)
+button_d.pack(pady=20)
+
+button_e = ttk.Button(root, text="Legendre Polynomials", command=open_window_legendre_poly)
+button_e.pack(pady=20)
+
+button_f = ttk.Button(root, text="Associated Legendre Polynomials", command=open_window_associated_legendre_poly)
+button_f.pack(pady=20)
+
 # Start the tkinter event loop
 root.mainloop()
