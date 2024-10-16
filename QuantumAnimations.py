@@ -21,7 +21,7 @@ def open_window_infinitesquarewell():
     
     #initial parameters
     initial_n=1 #quantum number
-    initial_L_nm=1.0 #initial well width in nm
+    initial_L_nm=0.1 #initial well width in nm
     
     #Convert initial_L to meters
     #initial_L=initial_L_nm * 1e-9  #meters
@@ -633,7 +633,7 @@ def open_window_legendre_poly():
         # Setting labels and title for the first plot
         ply.set_xlabel('x')
         ply.set_ylabel('P_l')
-        ply.set_title('Legendre Polynomials')
+        ply.set_title(f"Legendre Polynomials of (l={n})" )
         ply.axhline(0, color='black', lw=0.5, ls='--')
         ply.axhline(y=0, color='black',ls='--')
         ply.axvline(0, color='black', lw=0.5, ls='--')
@@ -657,7 +657,7 @@ def open_window_legendre_poly():
     label_n.pack(side=tk.LEFT, padx=(0, 10))
     
     # Slider for quantum number n
-    slider_n = ttk.Scale(frame_sliders, from_=0, to=1000, orient=tk.HORIZONTAL,length=500, command=lambda val: update_legendre())
+    slider_n = ttk.Scale(frame_sliders, from_=0, to=50, orient=tk.HORIZONTAL,length=500, command=lambda val: update_legendre())
     slider_n.set(initial_n)
     slider_n.pack(side=tk.LEFT, padx=(0, 10))
     
@@ -844,7 +844,7 @@ def open_window_spherical_harmonics():
 	        ax.set_xlabel('X')
 	        ax.set_ylabel('Y')
 	        ax.set_zlabel('Z')
-	        ax.set_title(f'Spherical Harmonics (Y_{l}^{m})')
+	        ax.set_title(f'Spherical Harmonics for m={m} and l={l}')
 	
 	        # Redraw the canvas
 	        canvas.draw()
