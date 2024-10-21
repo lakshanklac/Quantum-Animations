@@ -900,7 +900,8 @@ def open_window_tunneling():
     initial_a = 1.0
     initial_E = 0
     initial_V = 10.0
-    
+    message_shown = False  # To track if the message has been shown
+
     def calculate_wavefunctions(a, E, V):
         k = np.sqrt(2 * me * E / hbar**2)
         
@@ -921,12 +922,26 @@ def open_window_tunneling():
         psi_3 = D * np.exp(1j * k * x3)
             
         return x1, x2, x3, psi_1, psi_2, psi_3
-    
+
     def update_Tunneling():
+        nonlocal message_shown  # Allow the function to modify the flag
+
         a = float(slider_a.get())
         E = float(slider_E.get())
         V = float(slider_V.get())
-        
+
+        # Check if either 'a' or 'V' is zero and automatically set the other to zero
+        if a == 0 or V == 0:
+            if a != 0:
+                slider_a.set(0)
+                a = 0
+            if V != 0:
+                slider_V.set(0)
+                V = 0
+            if not message_shown:  # Only show the message once
+                messagebox.showinfo("Barrier Vanishes", "When either width (a) or potential (V) is zero, the barrier vanishes.")
+                message_shown = True
+
         # Get the wavefunctions
         x1, x2, x3, psi_1, psi_2, psi_3 = calculate_wavefunctions(a, E, V)
 
@@ -952,8 +967,11 @@ def open_window_tunneling():
 
         # Plot the wavefunctions
         plot_dirac.plot(x1, np.imag(psi_1), label=r"Im($\psi_1(x)$) for $x < 0$", color="b")
-        plot_dirac.plot(x2, np.imag(psi_2), label=fr"Im($\psi_2(x)$) for $0 < x < {a:.2f}$", color="r", linestyle="--")
-        plot_dirac.plot(x3, np.imag(psi_3), label=fr"Im($\psi_3(x)$) for $x > {a:.2f}$", color="orange", linestyle="--")
+        if a > 0:  # Only plot if there is a barrier
+            plot_dirac.plot(x2, np.imag(psi_2), label=fr"Im($\psi_2(x)$) for $0 < x < {a:.2f}$", color="r", linestyle="--")
+            plot_dirac.plot(x3, np.imag(psi_3), label=fr"Im($\psi_3(x)$) for $x > {a:.2f}$", color="orange", linestyle="--")
+        else:
+            plot_dirac.plot(x3, np.imag(psi_3), label=fr"Im($\psi_3(x)$) for $x > 0$", color="orange", linestyle="--")
 
         
         # Plot the reflection and transmission as constant lines
@@ -972,6 +990,21 @@ def open_window_tunneling():
         plot_dirac.grid(True)
 
         canvas.draw()
+
+    # Automatically set the other slider to 1 if it's 0 and the user moves one
+    def on_slider_change_a(value):
+        a = float(slider_a.get())
+        V = float(slider_V.get())
+        if V == 0 and a > 0:
+            slider_V.set(1)  # Automatically set V to 1
+        update_Tunneling()
+
+    def on_slider_change_V(value):
+        a = float(slider_a.get())
+        V = float(slider_V.get())
+        if a == 0 and V > 0:
+            slider_a.set(1)  # Automatically set a to 1
+        update_Tunneling()
     
     # Create the main window
     root = tk.Tk()
@@ -993,19 +1026,19 @@ def open_window_tunneling():
     # Slider for constant 'a'
     label_a = ttk.Label(frame_sliders, text="Width (a):")
     label_a.pack(side=tk.LEFT, padx=(0, 10))
-    slider_a = ttk.Scale(frame_sliders, from_=0, to=10.0, orient=tk.HORIZONTAL, length=300, command=lambda val: update_Tunneling())
+    slider_a = ttk.Scale(frame_sliders, from_=0, to=10.0, orient=tk.HORIZONTAL, length=300, command=on_slider_change_a)
     slider_a.set(initial_a)
     slider_a.pack(side=tk.LEFT, padx=(0, 10))
     
     current_a = tk.StringVar()
     current_a.set(f"a = {initial_a:.2f}")
     label_current_a = ttk.Label(frame_sliders, textvariable=current_a)
-    label_current_a.pack(side=tk.LEFT, padx=(0, 20))
+    label_current_a.pack(side=tk.LEFT, padx=(0, 10))
     
     # Slider for energy 'E'
     label_b = ttk.Label(frame_sliders, text="Energy (E):")
     label_b.pack(side=tk.LEFT, padx=(0, 10))
-    slider_E = ttk.Scale(frame_sliders, from_=0, to=20.0, orient=tk.HORIZONTAL, length=300, command=lambda val: update_Tunneling())
+    slider_E = ttk.Scale(frame_sliders, from_=0, to=200.0, orient=tk.HORIZONTAL, length=300, command=lambda val: update_Tunneling())
     slider_E.set(initial_E)
     slider_E.pack(side=tk.LEFT, padx=(0, 10))
     
@@ -1013,23 +1046,21 @@ def open_window_tunneling():
     current_E.set(f"E = {initial_E:.2f}")
     label_current_E = ttk.Label(frame_sliders, textvariable=current_E)
     label_current_E.pack(side=tk.LEFT, padx=(0, 20))
-
+    
     # Slider for potential 'V'
-    label_c = ttk.Label(frame_sliders, text="Potential (V):")
-    label_c.pack(side=tk.LEFT, padx=(0, 10))
-    slider_V = ttk.Scale(frame_sliders, from_=0, to=20.0, orient=tk.HORIZONTAL, length=300, command=lambda val: update_Tunneling())
+    label_V = ttk.Label(frame_sliders, text="Potential (V):")
+    label_V.pack(side=tk.LEFT, padx=(0, 10))
+    slider_V = ttk.Scale(frame_sliders, from_=0, to=19.0, orient=tk.HORIZONTAL, length=300, command=on_slider_change_V)
     slider_V.set(initial_V)
     slider_V.pack(side=tk.LEFT, padx=(0, 10))
-
+    
     current_V = tk.StringVar()
     current_V.set(f"V = {initial_V:.2f}")
     label_current_V = ttk.Label(frame_sliders, textvariable=current_V)
     label_current_V.pack(side=tk.LEFT, padx=(0, 20))
-
-    # Initial plot
+    
     update_Tunneling()
-
-    # Start the Tkinter event loop
+    
     root.mainloop()
 
 ##########################################################################################
