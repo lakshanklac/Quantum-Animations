@@ -904,24 +904,36 @@ def open_window_tunneling():
 
     def calculate_wavefunctions(a, E, V):
         k = np.sqrt(2 * me * E / hbar**2)
-        
+    
         # Ensure alpha is real for E < V, otherwise handle complex case
-        alpha = np.sqrt(2 * me * np.abs(V - E) / hbar**2) * (1 if E < V else 1j)
+        if E < V:
+            alpha = np.sqrt(2 * me * (V - E) / hbar**2)
+        else:
+            alpha = np.sqrt(2 * me * np.abs(V - E) / hbar**2) * 1j
 
+        # Coefficients for wavefunction inside and outside the barrier
         D = (2 * 1j * k * alpha * np.exp(-1j * k * a)) / ((alpha**2 - k**2) * np.sinh(alpha * a) + 2 * 1j * k * alpha * np.cosh(alpha * a))
         C = (D / (2 * alpha)) * (alpha - 1j * k) * np.exp(1j * k * a + alpha * a)
         B = (D / (2 * alpha)) * (alpha + 1j * k) * np.exp(1j * k * a - alpha * a)
         A = B + C - 1
-        
+            
+        # For the barrier region, we update the wavefunction to decay inside the barrier
         x1 = np.linspace(-10, 0, N)
         x2 = np.linspace(0, a, N)
         x3 = np.linspace(a, 10, N)
-        
+
         psi_1 = np.exp(1j * k * x1) + A * np.exp(-1j * k * x1)
-        psi_2 = B * np.exp(alpha * x2) + C * np.exp(-alpha * x2)
+    
+        # Corrected wavefunction for the barrier region (decay within the barrier)
+        if E < V:
+            psi_2 = B * np.exp(-alpha * x2) + C * np.exp(alpha * (x2 - a))
+        else:
+            psi_2 = B * np.exp(alpha * x2) + C * np.exp(-alpha * x2)
+
         psi_3 = D * np.exp(1j * k * x3)
-            
+
         return x1, x2, x3, psi_1, psi_2, psi_3
+
 
     def update_Tunneling():
         nonlocal message_shown  # Allow the function to modify the flag
@@ -982,6 +994,14 @@ def open_window_tunneling():
         plot_dirac.text(0, np.real(R), f'R = {np.real(R):.4f}', fontsize=10, color='cyan', ha='left')
         plot_dirac.text(0, np.real(T), f'T = {np.real(T):.4f}', fontsize=10, color='darkblue', ha='left')
         
+        # Plot the width and potential barrier lines
+        if a > 0 and V > 0:
+            # Horizontal line for potential
+            plot_dirac.plot([0, a], [V, V], color='black', linewidth=2, label='Potential Barrier')
+            # Vertical lines for width
+            plot_dirac.plot([0, 0], [0, V], color='black', linewidth=2)  # Start of the barrier
+            plot_dirac.plot([a, a], [0, V], color='black', linewidth=2)  # End of the barrier
+
         # Set titles and labels
         plot_dirac.set_title(f'(Tunnel Width = {a:.2f}, Energy = {E:.2f}, Potential = {V:.2f})')
         plot_dirac.set_xlabel('Position x (arbitrary units)')
@@ -1033,12 +1053,12 @@ def open_window_tunneling():
     current_a = tk.StringVar()
     current_a.set(f"a = {initial_a:.2f}")
     label_current_a = ttk.Label(frame_sliders, textvariable=current_a)
-    label_current_a.pack(side=tk.LEFT, padx=(0, 10))
+    label_current_a.pack(side=tk.LEFT, padx=(0, 20))
     
     # Slider for energy 'E'
     label_b = ttk.Label(frame_sliders, text="Energy (E):")
     label_b.pack(side=tk.LEFT, padx=(0, 10))
-    slider_E = ttk.Scale(frame_sliders, from_=0, to=200.0, orient=tk.HORIZONTAL, length=300, command=lambda val: update_Tunneling())
+    slider_E = ttk.Scale(frame_sliders, from_=0, to=10.0, orient=tk.HORIZONTAL, length=300, command=lambda val: update_Tunneling())
     slider_E.set(initial_E)
     slider_E.pack(side=tk.LEFT, padx=(0, 10))
     
@@ -1050,7 +1070,7 @@ def open_window_tunneling():
     # Slider for potential 'V'
     label_V = ttk.Label(frame_sliders, text="Potential (V):")
     label_V.pack(side=tk.LEFT, padx=(0, 10))
-    slider_V = ttk.Scale(frame_sliders, from_=0, to=19.0, orient=tk.HORIZONTAL, length=300, command=on_slider_change_V)
+    slider_V = ttk.Scale(frame_sliders, from_=0, to=20.0, orient=tk.HORIZONTAL, length=300, command=on_slider_change_V)
     slider_V.set(initial_V)
     slider_V.pack(side=tk.LEFT, padx=(0, 10))
     
