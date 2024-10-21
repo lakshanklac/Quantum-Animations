@@ -892,6 +892,146 @@ def open_window_spherical_harmonics():
 	# Start the Tkinter event loop
 	root.mainloop()
 
+def open_window_tunneling():
+    hbar = 1  # reduced Planck's constant, J·s
+    me = 1    # mass of an electron, kg
+    
+    N = 1000  # Number of points for plotting
+    initial_a = 1.0
+    initial_E = 0
+    initial_V = 10.0
+    
+    def calculate_wavefunctions(a, E, V):
+        k = np.sqrt(2 * me * E / hbar**2)
+        
+        # Ensure alpha is real for E < V, otherwise handle complex case
+        alpha = np.sqrt(2 * me * np.abs(V - E) / hbar**2) * (1 if E < V else 1j)
+
+        D = (2 * 1j * k * alpha * np.exp(-1j * k * a)) / ((alpha**2 - k**2) * np.sinh(alpha * a) + 2 * 1j * k * alpha * np.cosh(alpha * a))
+        C = (D / (2 * alpha)) * (alpha - 1j * k) * np.exp(1j * k * a + alpha * a)
+        B = (D / (2 * alpha)) * (alpha + 1j * k) * np.exp(1j * k * a - alpha * a)
+        A = B + C - 1
+        
+        x1 = np.linspace(-10, 0, N)
+        x2 = np.linspace(0, a, N)
+        x3 = np.linspace(a, 10, N)
+        
+        psi_1 = np.exp(1j * k * x1) + A * np.exp(-1j * k * x1)
+        psi_2 = B * np.exp(alpha * x2) + C * np.exp(-alpha * x2)
+        psi_3 = D * np.exp(1j * k * x3)
+            
+        return x1, x2, x3, psi_1, psi_2, psi_3
+    
+    def update_Tunneling():
+        a = float(slider_a.get())
+        E = float(slider_E.get())
+        V = float(slider_V.get())
+        
+        # Get the wavefunctions
+        x1, x2, x3, psi_1, psi_2, psi_3 = calculate_wavefunctions(a, E, V)
+
+        k = np.sqrt(2 * me * E / hbar**2)
+        
+        # Ensure alpha is real for E < V, otherwise handle complex case
+        alpha = np.sqrt(2 * me * np.abs(V - E) / hbar**2) * (1 if E < V else 1j)
+
+        # Special case for V = 0
+        if V == 0:
+            T = 1.0
+            R = 0.0
+        else:
+            T = (4 * k**2 * alpha**2) / ((alpha**2 - k**2) * (np.sinh(alpha * a))**2 + 4 * k**2 * alpha**2 * (np.cosh(alpha * a))**2)
+            R = 1 - T
+        
+        # Clear previous plots
+        plot_dirac.clear()
+        
+        current_a.set(f"a = {a:.2f}")
+        current_E.set(f"E = {E:.2f}")
+        current_V.set(f"V = {V:.2f}")
+
+        # Plot the wavefunctions
+        plot_dirac.plot(x1, np.imag(psi_1), label=r"Im($\psi_1(x)$) for $x < 0$", color="b")
+        plot_dirac.plot(x2, np.imag(psi_2), label=fr"Im($\psi_2(x)$) for $0 < x < {a:.2f}$", color="r", linestyle="--")
+        plot_dirac.plot(x3, np.imag(psi_3), label=fr"Im($\psi_3(x)$) for $x > {a:.2f}$", color="orange", linestyle="--")
+
+        
+        # Plot the reflection and transmission as constant lines
+        plot_dirac.axhline(y=np.real(R), linestyle='--', color='cyan', label='R (Reflection Coefficient)')
+        plot_dirac.axhline(y=np.real(T), linestyle='--', color='darkblue', label='T (Transmission Coefficient)')
+        
+        # Add text annotations for R and T
+        plot_dirac.text(0, np.real(R), f'R = {np.real(R):.4f}', fontsize=10, color='cyan', ha='left')
+        plot_dirac.text(0, np.real(T), f'T = {np.real(T):.4f}', fontsize=10, color='darkblue', ha='left')
+        
+        # Set titles and labels
+        plot_dirac.set_title(f'(Tunnel Width = {a:.2f}, Energy = {E:.2f}, Potential = {V:.2f})')
+        plot_dirac.set_xlabel('Position x (arbitrary units)')
+        plot_dirac.set_ylabel(r"$\psi(x)$")
+        plot_dirac.legend()
+        plot_dirac.grid(True)
+
+        canvas.draw()
+    
+    # Create the main window
+    root = tk.Tk()
+    root.title("Quantum Tunneling")
+    root.state('zoomed')
+    
+    # Create a single figure for both plots
+    fig, plot_dirac = plt.subplots(figsize=(8, 6))
+    
+    # Embed the figure into the Tkinter window
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+    
+    # Frame to hold sliders and labels
+    frame_sliders = ttk.Frame(root)
+    frame_sliders.pack(side=tk.TOP, fill=tk.X, padx=20, pady=10)
+    
+    # Slider for constant 'a'
+    label_a = ttk.Label(frame_sliders, text="Width (a):")
+    label_a.pack(side=tk.LEFT, padx=(0, 10))
+    slider_a = ttk.Scale(frame_sliders, from_=0, to=10.0, orient=tk.HORIZONTAL, length=300, command=lambda val: update_Tunneling())
+    slider_a.set(initial_a)
+    slider_a.pack(side=tk.LEFT, padx=(0, 10))
+    
+    current_a = tk.StringVar()
+    current_a.set(f"a = {initial_a:.2f}")
+    label_current_a = ttk.Label(frame_sliders, textvariable=current_a)
+    label_current_a.pack(side=tk.LEFT, padx=(0, 20))
+    
+    # Slider for energy 'E'
+    label_b = ttk.Label(frame_sliders, text="Energy (E):")
+    label_b.pack(side=tk.LEFT, padx=(0, 10))
+    slider_E = ttk.Scale(frame_sliders, from_=0, to=20.0, orient=tk.HORIZONTAL, length=300, command=lambda val: update_Tunneling())
+    slider_E.set(initial_E)
+    slider_E.pack(side=tk.LEFT, padx=(0, 10))
+    
+    current_E = tk.StringVar()
+    current_E.set(f"E = {initial_E:.2f}")
+    label_current_E = ttk.Label(frame_sliders, textvariable=current_E)
+    label_current_E.pack(side=tk.LEFT, padx=(0, 20))
+
+    # Slider for potential 'V'
+    label_c = ttk.Label(frame_sliders, text="Potential (V):")
+    label_c.pack(side=tk.LEFT, padx=(0, 10))
+    slider_V = ttk.Scale(frame_sliders, from_=0, to=20.0, orient=tk.HORIZONTAL, length=300, command=lambda val: update_Tunneling())
+    slider_V.set(initial_V)
+    slider_V.pack(side=tk.LEFT, padx=(0, 10))
+
+    current_V = tk.StringVar()
+    current_V.set(f"V = {initial_V:.2f}")
+    label_current_V = ttk.Label(frame_sliders, textvariable=current_V)
+    label_current_V.pack(side=tk.LEFT, padx=(0, 20))
+
+    # Initial plot
+    update_Tunneling()
+
+    # Start the Tkinter event loop
+    root.mainloop()
+
 ##########################################################################################
     
 # Main application window
@@ -920,6 +1060,9 @@ button_f = ttk.Button(root, text="Associated Legendre Polynomials", width=40, co
 button_f.pack(pady=20, ipadx=20, ipady=10)
 
 button_g = ttk.Button(root, text="Spherical Harmonics", width=40, command=open_window_spherical_harmonics)
+button_g.pack(pady=20, ipadx=20, ipady=10)
+
+button_g = ttk.Button(root, text="Quantum Tunneling", width=40, command=open_window_tunneling)
 button_g.pack(pady=20, ipadx=20, ipady=10)
 
 # Start the tkinter event loop
