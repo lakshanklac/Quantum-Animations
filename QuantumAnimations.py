@@ -903,18 +903,18 @@ def open_window_tunneling():
     message_shown = False  # To track if the message has been shown
 
     def calculate_wavefunctions(a, E, V):
-        k = np.sqrt(2 * me * E / hbar**2)
+        k = np.sqrt(2 * me * E)/hbar
     
         # Ensure alpha is real for E < V, otherwise handle complex case
         if E < V:
-            alpha = np.sqrt(2 * me * (V - E) / hbar**2)
+            alpha = np.sqrt(2 * me * (V - E)) / hbar
         else:
-            alpha = np.sqrt(2 * me * np.abs(V - E) / hbar**2) * 1j
+            alpha = np.sqrt(2 * me * np.abs(V - E))* 1j / hbar 
 
         # Coefficients for wavefunction inside and outside the barrier
-        D = (2 * 1j * k * alpha * np.exp(-1j * k * a)) / ((alpha**2 - k**2) * np.sinh(alpha * a) + 2 * 1j * k * alpha * np.cosh(alpha * a))
-        C = (D / (2 * alpha)) * (alpha - 1j * k) * np.exp(1j * k * a + alpha * a)
-        B = (D / (2 * alpha)) * (alpha + 1j * k) * np.exp(1j * k * a - alpha * a)
+        D = (2 * k * alpha * np.exp(-1j * k * a)) / ((alpha**2 - k**2) * np.cosh(alpha * a) + 2 * 1j * k * alpha * np.sinh(alpha * a))
+        C = (D / (2 * alpha)) * (alpha + 1j * k) * np.exp(1j * k * a - alpha * a)
+        B = (D / (2 * alpha)) * (alpha - 1j * k) * np.exp(1j * k * a + alpha * a)
         A = B + C - 1
             
         # For the barrier region, we update the wavefunction to decay inside the barrier
@@ -923,12 +923,9 @@ def open_window_tunneling():
         x3 = np.linspace(a, 10, N)
 
         psi_1 = np.exp(1j * k * x1) + A * np.exp(-1j * k * x1)
+        psi_2 = B * np.exp(-alpha * x2) + C * np.exp(alpha * (x2))
     
-        # Corrected wavefunction for the barrier region (decay within the barrier)
-        if E < V:
-            psi_2 = B * np.exp(-alpha * x2) + C * np.exp(alpha * (x2 - a))
-        else:
-            psi_2 = B * np.exp(alpha * x2) + C * np.exp(-alpha * x2)
+    
 
         psi_3 = D * np.exp(1j * k * x3)
 
@@ -976,6 +973,9 @@ def open_window_tunneling():
         current_a.set(f"a = {a:.2f}")
         current_E.set(f"E = {E:.2f}")
         current_V.set(f"V = {V:.2f}")
+        plot_dirac.axhline(y=0, color='black', linestyle='--')  # y=0
+        plot_dirac.set_ylim(-5,5)
+
 
         # Plot the wavefunctions
         plot_dirac.plot(x1, np.imag(psi_1), label=r"Im($\psi_1(x)$) for $x < 0$", color="b")
@@ -1008,6 +1008,7 @@ def open_window_tunneling():
         plot_dirac.set_ylabel(r"$\psi(x)$")
         plot_dirac.legend()
         plot_dirac.grid(True)
+        
 
         canvas.draw()
 
