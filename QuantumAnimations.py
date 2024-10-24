@@ -903,34 +903,41 @@ def open_window_tunneling():
     message_shown = False  # To track if the message has been shown
 
     def calculate_wavefunctions(a, E, V):
-        k = np.sqrt(2 * me * E)/hbar
-    
+        k = np.sqrt(2 * me * E) / hbar
+
         # Ensure alpha is real for E < V, otherwise handle complex case
-        if E < V:
+        if E <= V:
             alpha = np.sqrt(2 * me * (V - E)) / hbar
         else:
-            alpha = np.sqrt(2 * me * np.abs(V - E))* 1j / hbar 
+            alpha = np.sqrt(2 * me * np.abs(V - E)) * 1j / hbar
 
         # Coefficients for wavefunction inside and outside the barrier
-        D = (2 * k * alpha * np.exp(-1j * k * a)) / ((alpha**2 - k**2) * np.cosh(alpha * a) + 2 * 1j * k * alpha * np.sinh(alpha * a))
-        C = (D / (2 * alpha)) * (alpha + 1j * k) * np.exp(1j * k * a - alpha * a)
-        B = (D / (2 * alpha)) * (alpha - 1j * k) * np.exp(1j * k * a + alpha * a)
-        A = B + C - 1
-            
-        # For the barrier region, we update the wavefunction to decay inside the barrier
+        A=1
+        F = (2 * k * alpha * np.exp(-1j * k * a))*A / ((alpha**2 - k**2) * np.cosh(alpha * a) + 2 * 1j * k * alpha * np.sinh(alpha * a))
+        D = (F / (2 * alpha)) * (alpha + 1j * k) * np.exp(1j * k * a - alpha * a)
+        C = (F / (2 * alpha)) * (alpha - 1j * k) * np.exp(1j * k * a + alpha * a)
+        B = C + D - A
+
+        # Combine regions into a single x array
         x1 = np.linspace(-10, 0, N)
         x2 = np.linspace(0, a, N)
         x3 = np.linspace(a, 10, N)
 
-        psi_1 = np.exp(1j * k * x1) + A * np.exp(-1j * k * x1)
-        psi_2 = B * np.exp(-alpha * x2) + C * np.exp(alpha * (x2))
-    
-    
+        x = np.concatenate((x1, x2, x3))  # Combined x array
 
-        psi_3 = D * np.exp(1j * k * x3)
+        if V == 0 or a == 0:
+            # When V=0 or a=0, it's a single continuous wave
+            psi = np.exp(1j * k * x)  # Same wave across the entire region
+        else:
+            # Calculate wavefunctions for different regions
+            psi_1 = A*np.exp(1j * k * x1) + B * np.exp(-1j * k * x1)
+            psi_2 = C * np.exp(-alpha * x2) + D * np.exp(alpha * x2)
+            psi_3 = F * np.exp(1j * k * x3)
+            
+            # Combine wavefunctions into a single array
+            psi = np.concatenate((psi_1, psi_2, psi_3))
 
-        return x1, x2, x3, psi_1, psi_2, psi_3
-
+        return x, psi
 
     def update_Tunneling():
         nonlocal message_shown  # Allow the function to modify the flag
@@ -952,7 +959,7 @@ def open_window_tunneling():
                 message_shown = True
 
         # Get the wavefunctions
-        x1, x2, x3, psi_1, psi_2, psi_3 = calculate_wavefunctions(a, E, V)
+        x, psi = calculate_wavefunctions(a, E, V)
 
         k = np.sqrt(2 * me * E / hbar**2)
         
@@ -968,47 +975,55 @@ def open_window_tunneling():
             R = 1 - T
         
         # Clear previous plots
-        plot_dirac.clear()
+        plot_tunnel.clear()
         
         current_a.set(f"a = {a:.2f}")
         current_E.set(f"E = {E:.2f}")
         current_V.set(f"V = {V:.2f}")
-        plot_dirac.axhline(y=0, color='black', linestyle='--')  # y=0
-        plot_dirac.set_ylim(-5,5)
-
-
-        # Plot the wavefunctions
-        plot_dirac.plot(x1, np.imag(psi_1), label=r"Im($\psi_1(x)$) for $x < 0$", color="b")
-        if a > 0:  # Only plot if there is a barrier
-            plot_dirac.plot(x2, np.imag(psi_2), label=fr"Im($\psi_2(x)$) for $0 < x < {a:.2f}$", color="r", linestyle="--")
-            plot_dirac.plot(x3, np.imag(psi_3), label=fr"Im($\psi_3(x)$) for $x > {a:.2f}$", color="orange", linestyle="--")
-        else:
-            plot_dirac.plot(x3, np.imag(psi_3), label=fr"Im($\psi_3(x)$) for $x > 0$", color="orange", linestyle="--")
-
+        plot_tunnel.axhline(y=0, color='black', linestyle='--')  # y=0
         
+        
+        
+
+        # Plot the wave function (imaginary part)
+        plot_tunnel.plot(x, np.imag(psi), label=r"Im($\psi(x)$)", color="b")
+
         # Plot the reflection and transmission as constant lines
-        plot_dirac.axhline(y=np.real(R), linestyle='--', color='cyan', label='R (Reflection Coefficient)')
-        plot_dirac.axhline(y=np.real(T), linestyle='--', color='darkblue', label='T (Transmission Coefficient)')
+        plot_tunnel.axhline(y=np.real(R), linestyle='--', color='cyan', label='R (Reflection Coefficient)')
+        plot_tunnel.axhline(y=np.real(T), linestyle='--', color='darkblue', label='T (Transmission Coefficient)')
+        
         
         # Add text annotations for R and T
-        plot_dirac.text(0, np.real(R), f'R = {np.real(R):.4f}', fontsize=10, color='cyan', ha='left')
-        plot_dirac.text(0, np.real(T), f'T = {np.real(T):.4f}', fontsize=10, color='darkblue', ha='left')
+        plot_tunnel.text(0, np.real(R), f'R = {np.real(R):.4f}', fontsize=10, color='cyan', ha='left')
+        plot_tunnel.text(0, np.real(T), f'T = {np.real(T):.4f}', fontsize=10, color='darkblue', ha='left')
         
         # Plot the width and potential barrier lines
         if a > 0 and V > 0:
             # Horizontal line for potential
-            plot_dirac.plot([0, a], [V, V], color='black', linewidth=2, label='Potential Barrier')
+            plot_tunnel.plot([0, a], [V, V], color='black', linewidth=2, label='Potential Barrier')
             # Vertical lines for width
-            plot_dirac.plot([0, 0], [0, V], color='black', linewidth=2)  # Start of the barrier
-            plot_dirac.plot([a, a], [0, V], color='black', linewidth=2)  # End of the barrier
+            plot_tunnel.plot([0, 0], [0, V], color='black', linewidth=2)  # Start of the barrier
+            plot_tunnel.plot([a, a], [0, V], color='black', linewidth=2)  # End of the barrier
+            
+            plot_tunnel.plot([0, a], [-V, -V], color='g', linewidth=2, linestyle='--', label='Magnitude of Potential Barrier')
+            # Vertical lines for width
+            plot_tunnel.plot([0, 0], [0, -V], color='g', linewidth=2,linestyle='--')  # Start of the barrier
+            plot_tunnel.plot([a, a], [0, -V], color='g', linewidth=2,linestyle='--')  # End of the barrier
 
         # Set titles and labels
-        plot_dirac.set_title(f'(Tunnel Width = {a:.2f}, Energy = {E:.2f}, Potential = {V:.2f})')
-        plot_dirac.set_xlabel('Position x (arbitrary units)')
-        plot_dirac.set_ylabel(r"$\psi(x)$")
-        plot_dirac.legend()
-        plot_dirac.grid(True)
+        plot_tunnel.set_title(f'(Tunnel Width = {a:.2f}, Energy = {E:.2f}, Potential = {V:.2f})')
+        plot_tunnel.set_xlabel('Position x (arbitrary units)')
+        plot_tunnel.set_ylabel(r"$\psi(x)$")
+        plot_tunnel.legend()
+        plot_tunnel.grid(True)
         
+        # Fix y-axis limits based on max(V)
+        max_y = max(10, V + 2)  # Ensure there's a minimum range, so it doesn't squeeze at low V
+        plot_tunnel.set_ylim(-max_y, max_y)  # Symmetric limits around 0
+
+        # Set y-axis ticks with steps of 1
+        y_ticks = np.arange(-max_y, max_y+1, 1)  # y-ticks with step of 1
+        plot_tunnel.set_yticks(y_ticks)
 
         canvas.draw()
 
@@ -1033,7 +1048,7 @@ def open_window_tunneling():
     root.state('zoomed')
     
     # Create a single figure for both plots
-    fig, plot_dirac = plt.subplots(figsize=(8, 6))
+    fig, plot_tunnel = plt.subplots(figsize=(8, 6))
     
     # Embed the figure into the Tkinter window
     canvas = FigureCanvasTkAgg(fig, master=root)
@@ -1069,8 +1084,8 @@ def open_window_tunneling():
     label_current_E.pack(side=tk.LEFT, padx=(0, 20))
     
     # Slider for potential 'V'
-    label_V = ttk.Label(frame_sliders, text="Potential (V):")
-    label_V.pack(side=tk.LEFT, padx=(0, 10))
+    label_c = ttk.Label(frame_sliders, text="Potential (V):")
+    label_c.pack(side=tk.LEFT, padx=(0, 10))
     slider_V = ttk.Scale(frame_sliders, from_=0, to=20.0, orient=tk.HORIZONTAL, length=300, command=on_slider_change_V)
     slider_V.set(initial_V)
     slider_V.pack(side=tk.LEFT, padx=(0, 10))
@@ -1080,8 +1095,7 @@ def open_window_tunneling():
     label_current_V = ttk.Label(frame_sliders, textvariable=current_V)
     label_current_V.pack(side=tk.LEFT, padx=(0, 20))
     
-    update_Tunneling()
-    
+    update_Tunneling()  # Initial plot update
     root.mainloop()
 
 ##########################################################################################
