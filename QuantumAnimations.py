@@ -1098,6 +1098,102 @@ def open_window_tunneling():
     update_Tunneling()  # Initial plot update
     root.mainloop()
 
+def open_window_free_electron_gas():
+    # Constants
+    hbar = 1  # Reduced Planck's constant
+    me = 1    # Mass of an electron
+    initial_k = 1.0
+    initial_q = 1.0
+    N = 1000
+
+    # Calculate energy and pressure
+    def calculate_Energy(k, q):
+        constant_fac = (hbar**2) * ((3 * np.pi**2)**(5 / 3)) / (10 * me * np.pi**2)
+        variable_fac = (N * q)**(5 / 3)
+        V = 3 * N * (q / k**3) * np.pi**2  # Volume based on parameters
+        E = constant_fac * variable_fac * V**(-2 / 3)
+        return E
+
+    def calculate_Pressure(k, q):
+        # Recalculate volume based on k and q
+        V = 3 * N * (q / k**3) * np.pi**2  # Ensure consistency in volume calculation
+        rho = N * q / V  # Density
+        P = (3 * np.pi**2)**(2 / 3) * (hbar**2) * (1 / (5 * me)) * rho**(5 / 3)
+        return P
+
+    def update_free_electron_gas():
+        k = float(slider_k.get())
+        q = float(slider_q.get())
+
+        E = calculate_Energy(k, q)
+        P = calculate_Pressure(k, q)
+
+        # Clear previous plots
+        plot_free_electron.clear()
+
+        current_k.set(f"k = {k:.2f}")
+        current_q.set(f"q = {q:.2f}")
+
+        # Plot energy and pressure as horizontal lines
+        plot_free_electron.axhline(y=P, linestyle='--', color='red', label=f'P (Pressure) = {P:.2f}')
+        plot_free_electron.axhline(y=E, linestyle='--', color='cyan', label=f'E (Energy) = {E:.2f}')
+        
+        # Set titles and labels
+        plot_free_electron.set_title(f'Free Electron Gas (k={k:.2f}, q={q:.2f})')
+        plot_free_electron.set_xlabel('Wave Vector k')
+        plot_free_electron.set_ylabel('Energy and Pressure')
+        plot_free_electron.legend()
+        plot_free_electron.grid(True)
+
+        # Fixed y-limits for consistent scale
+        plot_free_electron.set_ylim(-20, 20)
+        
+        canvas.draw()
+
+    # Tkinter window setup
+    root = tk.Tk()
+    root.title("Free Electron Gas")
+    root.state('zoomed')
+
+    # Matplotlib figure setup
+    fig, plot_free_electron = plt.subplots(figsize=(8, 6))
+    plt.tight_layout(pad=3.0)
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+    # Frame to hold sliders and labels
+    frame_sliders = ttk.Frame(root)
+    frame_sliders.pack(side=tk.TOP, fill=tk.X, padx=20, pady=10)
+
+    # Slider for wave vector k
+    label_k = ttk.Label(frame_sliders, text="Wave Vector (k):")
+    label_k.pack(side=tk.LEFT, padx=(0, 10))
+    slider_k = ttk.Scale(frame_sliders, from_=0.1, to=10.0, orient=tk.HORIZONTAL, length=300, command=lambda val: update_free_electron_gas())
+    slider_k.set(initial_k)
+    slider_k.pack(side=tk.LEFT, padx=(0, 10))
+
+    current_k = tk.StringVar()
+    current_k.set(f"k = {initial_k:.2f}")
+    label_current_k = ttk.Label(frame_sliders, textvariable=current_k)
+    label_current_k.pack(side=tk.LEFT, padx=(0, 20))
+
+    # Slider for charge density q
+    label_q = ttk.Label(frame_sliders, text="Charge Density (q):")
+    label_q.pack(side=tk.LEFT, padx=(0, 10))
+    slider_q = ttk.Scale(frame_sliders, from_=0.1, to=10.0, orient=tk.HORIZONTAL, length=300, command=lambda val: update_free_electron_gas())
+    slider_q.set(initial_q)
+    slider_q.pack(side=tk.LEFT, padx=(0, 10))
+
+    current_q = tk.StringVar()
+    current_q.set(f"q = {initial_q:.2f}")
+    label_current_q = ttk.Label(frame_sliders, textvariable=current_q)
+    label_current_q.pack(side=tk.LEFT, padx=(0, 20))
+
+    # Initial plot update
+    update_free_electron_gas()
+    root.mainloop()
+
 ##########################################################################################
     
 # Main application window
@@ -1130,6 +1226,9 @@ button_g.pack(pady=20, ipadx=20, ipady=10)
 
 button_g = ttk.Button(root, text="Quantum Tunneling", width=40, command=open_window_tunneling)
 button_g.pack(pady=20, ipadx=20, ipady=10)
+
+button_h = ttk.Button(root, text="Free Electron Gas", width=40, command=open_window_free_electron_gas)
+button_h.pack(pady=20, ipadx=20, ipady=10)
 
 # Start the tkinter event loop
 root.mainloop()
