@@ -1102,51 +1102,50 @@ def open_window_free_electron_gas():
     # Constants
     hbar = 1  # Reduced Planck's constant
     me = 1    # Mass of an electron
-    initial_k = 1.0
-    initial_q = 1.0
-    N = 1000
+    initial_q = 1
+    initial_N = 1
 
-    # Calculate energy and pressure
-    def calculate_Energy(k, q):
+    # Calculate energy and pressure as functions of V, with q and N as parameters
+    def calculate_Energy(V, q, N):
         constant_fac = (hbar**2) * ((3 * np.pi**2)**(5 / 3)) / (10 * me * np.pi**2)
         variable_fac = (N * q)**(5 / 3)
-        V = 3 * N * (q / k**3) * np.pi**2  # Volume based on parameters
         E = constant_fac * variable_fac * V**(-2 / 3)
         return E
 
-    def calculate_Pressure(k, q):
-        # Recalculate volume based on k and q
-        V = 3 * N * (q / k**3) * np.pi**2  # Ensure consistency in volume calculation
-        rho = N * q / V  # Density
-        P = (3 * np.pi**2)**(2 / 3) * (hbar**2) * (1 / (5 * me)) * rho**(5 / 3)
+    def calculate_Pressure(V, q, N):
+        rho = N * q # Density
+        P = (3 * np.pi**2)**(2 / 3) * (hbar**2) * (1 / (5 * me)) * rho**(5 / 3)*(V)**(-5/3)
         return P
 
     def update_free_electron_gas():
-        k = float(slider_k.get())
-        q = float(slider_q.get())
+        # Round values to ensure integer steps
+        q = round(float(slider_q.get()))
+        N = round(float(slider_N.get()))
 
-        E = calculate_Energy(k, q)
-        P = calculate_Pressure(k, q)
+        # Generate a range for volume V to plot E and P against
+        V_values = np.linspace(0.001, 1000, 10000)
+        E_values = calculate_Energy(V_values, q, N)
+        P_values = calculate_Pressure(V_values, q, N)
 
         # Clear previous plots
         plot_free_electron.clear()
 
-        current_k.set(f"k = {k:.2f}")
-        current_q.set(f"q = {q:.2f}")
+        current_q.set(f"q = {q}")
+        current_N.set(f"N = {N}")
 
-        # Plot energy and pressure as horizontal lines
-        plot_free_electron.axhline(y=P, linestyle='--', color='red', label=f'P (Pressure) = {P:.2f}')
-        plot_free_electron.axhline(y=E, linestyle='--', color='cyan', label=f'E (Energy) = {E:.2f}')
-        
+        # Plot energy and pressure as functions of V
+        plot_free_electron.plot(V_values, E_values, color='cyan', label='E (Energy)')
+        plot_free_electron.plot(V_values, P_values, color='red', label='P (Pressure)')
+
         # Set titles and labels
-        plot_free_electron.set_title(f'Free Electron Gas (k={k:.2f}, q={q:.2f})')
-        plot_free_electron.set_xlabel('Wave Vector k')
+        plot_free_electron.set_title(f'Free Electron Gas (q={q}, N={N})')
+        plot_free_electron.set_xlabel('Volume (V)')
         plot_free_electron.set_ylabel('Energy and Pressure')
         plot_free_electron.legend()
         plot_free_electron.grid(True)
 
-        # Fixed y-limits for consistent scale
-        plot_free_electron.set_ylim(-20, 20)
+        # Adjust y-limits for consistent scale
+        plot_free_electron.set_ylim(0,2500)
         
         canvas.draw()
 
@@ -1166,29 +1165,29 @@ def open_window_free_electron_gas():
     frame_sliders = ttk.Frame(root)
     frame_sliders.pack(side=tk.TOP, fill=tk.X, padx=20, pady=10)
 
-    # Slider for wave vector k
-    label_k = ttk.Label(frame_sliders, text="Wave Vector (k):")
-    label_k.pack(side=tk.LEFT, padx=(0, 10))
-    slider_k = ttk.Scale(frame_sliders, from_=0.1, to=10.0, orient=tk.HORIZONTAL, length=300, command=lambda val: update_free_electron_gas())
-    slider_k.set(initial_k)
-    slider_k.pack(side=tk.LEFT, padx=(0, 10))
-
-    current_k = tk.StringVar()
-    current_k.set(f"k = {initial_k:.2f}")
-    label_current_k = ttk.Label(frame_sliders, textvariable=current_k)
-    label_current_k.pack(side=tk.LEFT, padx=(0, 20))
-
     # Slider for charge density q
     label_q = ttk.Label(frame_sliders, text="Charge Density (q):")
     label_q.pack(side=tk.LEFT, padx=(0, 10))
-    slider_q = ttk.Scale(frame_sliders, from_=0.1, to=10.0, orient=tk.HORIZONTAL, length=300, command=lambda val: update_free_electron_gas())
+    slider_q = ttk.Scale(frame_sliders, from_=1, to=10, orient=tk.HORIZONTAL, length=500, command=lambda val: update_free_electron_gas())
     slider_q.set(initial_q)
     slider_q.pack(side=tk.LEFT, padx=(0, 10))
 
     current_q = tk.StringVar()
-    current_q.set(f"q = {initial_q:.2f}")
+    current_q.set(f"q = {initial_q}")
     label_current_q = ttk.Label(frame_sliders, textvariable=current_q)
     label_current_q.pack(side=tk.LEFT, padx=(0, 20))
+
+    # Slider for number of particles N
+    label_N = ttk.Label(frame_sliders, text="Number of Particles (N):")
+    label_N.pack(side=tk.LEFT, padx=(0, 10))
+    slider_N = ttk.Scale(frame_sliders, from_=1, to=100, orient=tk.HORIZONTAL, length=500, command=lambda val: update_free_electron_gas())
+    slider_N.set(initial_N)
+    slider_N.pack(side=tk.LEFT, padx=(0, 10))
+
+    current_N = tk.StringVar()
+    current_N.set(f"N = {initial_N}")
+    label_current_N = ttk.Label(frame_sliders, textvariable=current_N)
+    label_current_N.pack(side=tk.LEFT, padx=(0, 20))
 
     # Initial plot update
     update_free_electron_gas()
