@@ -1098,13 +1098,22 @@ def open_window_tunneling():
     update_Tunneling()  # Initial plot update
     root.mainloop()
 
+import tkinter as tk
+from tkinter import ttk
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 def open_window_free_electron_gas():
     # Constants
     hbar = 1  # Reduced Planck's constant
     me = 1    # Mass of an electron
     initial_q = 1
     initial_N = 1
-    initial_ymax=20
+    initial_ymax = 20
+    y_ultimate = 10000
+    initial_x = 10
+    x_ultimate = 1000
 
     # Calculate energy and pressure as functions of V, with q and N as parameters
     def calculate_Energy(V, q, N):
@@ -1114,18 +1123,19 @@ def open_window_free_electron_gas():
         return E
 
     def calculate_Pressure(V, q, N):
-        rho = N * q # Density
-        P = (3 * np.pi**2)**(2 / 3) * (hbar**2) * (1 / (5 * me)) * rho**(5 / 3)*(V)**(-5/3)
+        rho = N * q  # Density
+        P = (3 * np.pi**2)**(2 / 3) * (hbar**2) * (1 / (5 * me)) * rho**(5 / 3) * V**(-5 / 3)
         return P
 
     def update_free_electron_gas():
         # Round values to ensure integer steps
         q = round(float(slider_q.get()))
         N = round(float(slider_N.get()))
-        ymax=round(float(slider_ymax.get()))
+        ymax = round(float(slider_ymax.get()))
+        xmax = round(float(slider_xmax.get()))
 
-        # Generate a range for volume V to plot E and P against
-        V_values = np.linspace(0.001, 1000, 10000)
+        # Generate a range for volume V to plot E and P against, using xmax from slider
+        V_values = np.linspace(0.001, xmax, 10000)
         E_values = calculate_Energy(V_values, q, N)
         P_values = calculate_Pressure(V_values, q, N)
 
@@ -1134,6 +1144,8 @@ def open_window_free_electron_gas():
 
         current_q.set(f"q = {q}")
         current_N.set(f"N = {N}")
+        current_y.set(f"{ymax}")  # Update current_y with ymax
+        current_x.set(f"{xmax}")  # Update current_x with xmax
 
         # Plot energy and pressure as functions of V
         plot_free_electron.plot(V_values, E_values, color='cyan', label='E (Energy)')
@@ -1147,7 +1159,7 @@ def open_window_free_electron_gas():
         plot_free_electron.grid(True)
 
         # Adjust y-limits for consistent scale
-        plot_free_electron.set_ylim(0,ymax)
+        plot_free_electron.set_ylim(0, ymax)
         
         canvas.draw()
 
@@ -1158,54 +1170,64 @@ def open_window_free_electron_gas():
 
     # Matplotlib figure setup
     fig, plot_free_electron = plt.subplots(figsize=(8, 6))
-    plt.tight_layout(pad=3.0)
+    plt.tight_layout(pad=1.0)
     canvas = FigureCanvasTkAgg(fig, master=root)
     canvas.draw()
     canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-    # Frame to hold sliders and labels
+    # Frame to hold sliders in a grid format
     frame_sliders = ttk.Frame(root)
-    frame_sliders.pack(side=tk.TOP, fill=tk.X, padx=20, pady=10)
+    frame_sliders.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
 
-    # Slider for charge density q
-    label_q = ttk.Label(frame_sliders, text="Charge Density (q):")
-    label_q.pack(side=tk.LEFT, padx=(0, 10))
-    slider_q = ttk.Scale(frame_sliders, from_=1, to=10, orient=tk.HORIZONTAL, length=300, command=lambda val: update_free_electron_gas())
+    # First row, first column: Charge Density (q)
+    frame_q = ttk.Frame(frame_sliders)
+    frame_q.grid(row=0, column=0, padx=5, pady=5)
+    ttk.Label(frame_q, text="Charge Density (q):").grid(row=0, column=0, sticky="w")
+    slider_q = ttk.Scale(frame_q, from_=1, to=10, orient=tk.HORIZONTAL, length=500, command=lambda val: update_free_electron_gas())
     slider_q.set(initial_q)
-    slider_q.pack(side=tk.LEFT, padx=(0, 10))
-
+    slider_q.grid(row=0, column=1, sticky="w")
     current_q = tk.StringVar()
     current_q.set(f"q = {initial_q}")
-    label_current_q = ttk.Label(frame_sliders, textvariable=current_q)
-    label_current_q.pack(side=tk.LEFT, padx=(0, 20))
+    ttk.Label(frame_q, textvariable=current_q).grid(row=0, column=2, sticky="w", padx=10)
 
-    # Slider for number of particles N
-    label_N = ttk.Label(frame_sliders, text="Number of Particles (N):")
-    label_N.pack(side=tk.LEFT, padx=(0, 10))
-    slider_N = ttk.Scale(frame_sliders, from_=1, to=100, orient=tk.HORIZONTAL, length=300, command=lambda val: update_free_electron_gas())
+    # First row, second column: Number of Particles (N)
+    frame_N = ttk.Frame(frame_sliders)
+    frame_N.grid(row=0, column=1, padx=5, pady=5)
+    ttk.Label(frame_N, text="Number of Particles (N):").grid(row=0, column=0, sticky="w")
+    slider_N = ttk.Scale(frame_N, from_=1, to=100, orient=tk.HORIZONTAL, length=500, command=lambda val: update_free_electron_gas())
     slider_N.set(initial_N)
-    slider_N.pack(side=tk.LEFT, padx=(0, 10))
-
+    slider_N.grid(row=0, column=1, sticky="w")
     current_N = tk.StringVar()
     current_N.set(f"N = {initial_N}")
-    label_current_N = ttk.Label(frame_sliders, textvariable=current_N)
-    label_current_N.pack(side=tk.LEFT, padx=(0, 20))
-    
-    # Slider for number of particles N
-    label_y = ttk.Label(frame_sliders, text="Maximum y:")
-    label_y.pack(side=tk.LEFT, padx=(0, 10))
-    slider_ymax = ttk.Scale(frame_sliders, from_=initial_ymax, to=5000, orient=tk.HORIZONTAL, length=300, command=lambda val: update_free_electron_gas())
-    slider_ymax.set(initial_ymax)
-    slider_ymax.pack(side=tk.LEFT, padx=(0, 10))
+    ttk.Label(frame_N, textvariable=current_N).grid(row=0, column=2, sticky="w", padx=10)
 
+    # Second row, first column: Maximum y
+    frame_y = ttk.Frame(frame_sliders)
+    frame_y.grid(row=1, column=0, padx=5, pady=5)
+    ttk.Label(frame_y, text="Maximum y:").grid(row=0, column=0, sticky="w")
+    slider_ymax = ttk.Scale(frame_y, from_=initial_ymax, to=y_ultimate, orient=tk.HORIZONTAL, length=500, command=lambda val: update_free_electron_gas())
+    slider_ymax.set(initial_ymax)
+    slider_ymax.grid(row=0, column=1, sticky="w")
     current_y = tk.StringVar()
-    #current_y.set(f"ymax={initial_ymax}")
-    label_current_y = ttk.Label(frame_sliders, textvariable=current_y)
-    label_current_y.pack(side=tk.LEFT, padx=(0, 20))
+    current_y.set(f"{initial_ymax}")
+    ttk.Label(frame_y, textvariable=current_y).grid(row=0, column=2, sticky="w", padx=10)
+
+    # Second row, second column: Maximum x
+    frame_x = ttk.Frame(frame_sliders)
+    frame_x.grid(row=1, column=1, padx=5, pady=5)
+    ttk.Label(frame_x, text="Maximum x:").grid(row=0, column=0, sticky="w")
+    slider_xmax = ttk.Scale(frame_x, from_=initial_x, to=x_ultimate, orient=tk.HORIZONTAL, length=500, command=lambda val: update_free_electron_gas())
+    slider_xmax.set(initial_x)
+    slider_xmax.grid(row=0, column=1, sticky="w")
+    current_x = tk.StringVar()
+    current_x.set(f"{initial_x}")
+    ttk.Label(frame_x, textvariable=current_x).grid(row=0, column=2, sticky="w", padx=10)
 
     # Initial plot update
     update_free_electron_gas()
     root.mainloop()
+
+
 
 
 ##########################################################################################
