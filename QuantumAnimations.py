@@ -1104,6 +1104,7 @@ def open_window_free_electron_gas():
     me = 1    # Mass of an electron
     initial_q = 1
     initial_N = 1
+    initial_ymax=20
 
     # Calculate energy and pressure as functions of V, with q and N as parameters
     def calculate_Energy(V, q, N):
@@ -1121,6 +1122,7 @@ def open_window_free_electron_gas():
         # Round values to ensure integer steps
         q = round(float(slider_q.get()))
         N = round(float(slider_N.get()))
+        ymax=round(float(slider_ymax.get()))
 
         # Generate a range for volume V to plot E and P against
         V_values = np.linspace(0.001, 1000, 10000)
@@ -1145,7 +1147,7 @@ def open_window_free_electron_gas():
         plot_free_electron.grid(True)
 
         # Adjust y-limits for consistent scale
-        plot_free_electron.set_ylim(0,2500)
+        plot_free_electron.set_ylim(0,ymax)
         
         canvas.draw()
 
@@ -1168,7 +1170,7 @@ def open_window_free_electron_gas():
     # Slider for charge density q
     label_q = ttk.Label(frame_sliders, text="Charge Density (q):")
     label_q.pack(side=tk.LEFT, padx=(0, 10))
-    slider_q = ttk.Scale(frame_sliders, from_=1, to=10, orient=tk.HORIZONTAL, length=500, command=lambda val: update_free_electron_gas())
+    slider_q = ttk.Scale(frame_sliders, from_=1, to=10, orient=tk.HORIZONTAL, length=300, command=lambda val: update_free_electron_gas())
     slider_q.set(initial_q)
     slider_q.pack(side=tk.LEFT, padx=(0, 10))
 
@@ -1180,7 +1182,7 @@ def open_window_free_electron_gas():
     # Slider for number of particles N
     label_N = ttk.Label(frame_sliders, text="Number of Particles (N):")
     label_N.pack(side=tk.LEFT, padx=(0, 10))
-    slider_N = ttk.Scale(frame_sliders, from_=1, to=100, orient=tk.HORIZONTAL, length=500, command=lambda val: update_free_electron_gas())
+    slider_N = ttk.Scale(frame_sliders, from_=1, to=100, orient=tk.HORIZONTAL, length=300, command=lambda val: update_free_electron_gas())
     slider_N.set(initial_N)
     slider_N.pack(side=tk.LEFT, padx=(0, 10))
 
@@ -1188,10 +1190,23 @@ def open_window_free_electron_gas():
     current_N.set(f"N = {initial_N}")
     label_current_N = ttk.Label(frame_sliders, textvariable=current_N)
     label_current_N.pack(side=tk.LEFT, padx=(0, 20))
+    
+    # Slider for number of particles N
+    label_y = ttk.Label(frame_sliders, text="Maximum y:")
+    label_y.pack(side=tk.LEFT, padx=(0, 10))
+    slider_ymax = ttk.Scale(frame_sliders, from_=initial_ymax, to=5000, orient=tk.HORIZONTAL, length=300, command=lambda val: update_free_electron_gas())
+    slider_ymax.set(initial_ymax)
+    slider_ymax.pack(side=tk.LEFT, padx=(0, 10))
+
+    current_y = tk.StringVar()
+    #current_y.set(f"ymax={initial_ymax}")
+    label_current_y = ttk.Label(frame_sliders, textvariable=current_y)
+    label_current_y.pack(side=tk.LEFT, padx=(0, 20))
 
     # Initial plot update
     update_free_electron_gas()
     root.mainloop()
+
 
 ##########################################################################################
     
