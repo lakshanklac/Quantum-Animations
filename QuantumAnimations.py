@@ -1226,6 +1226,101 @@ def open_window_free_electron_gas():
     # Initial plot update
     update_free_electron_gas()
     root.mainloop()
+    
+#-------------
+def open_window_distribution_functions():
+    # Constants
+    k_B = 1  # Boltzmann constant in arbitrary units
+    initial_alpha = 1  # Initial value for alpha (scaling factor for mu)
+    initial_T = 3  # Initial temperature in Kelvin
+
+    # Functions to calculate distributions
+    def maxwell_boltzmann(E, mu, T):
+        return np.exp(-(E - mu) / (k_B * T))
+
+    def fermi_dirac(E, mu, T):
+        return 1 / (np.exp((E - mu) / (k_B * T)) + 1)
+
+    def bose_einstein(E, mu, T):
+        return np.where(E > mu, 1 / (np.exp((E - mu) / (k_B * T)) - 1), np.inf)
+
+    def update_plot(*args):
+        # Get values from sliders
+        T = slider_T.get()
+        alpha = slider_alpha.get()
+        mu = alpha * k_B * T
+        E = np.linspace(-5, 50, 500)  # Energy range
+
+        # Update labels
+        current_T.set(f"T = {T:.2f} K")
+        current_alpha.set(f"α = {alpha:.2f}")
+
+        # Clear the previous plot
+        ax.clear()
+
+        # Plot distributions
+        ax.plot(E, maxwell_boltzmann(E, mu, T), label="Maxwell-Boltzmann", color="blue")
+        ax.plot(E, fermi_dirac(E, mu, T), label="Fermi-Dirac", color="red")
+        ax.plot(E, bose_einstein(E, mu, T), label="Bose-Einstein", color="green")
+
+        # Labels and title
+        ax.set_xlabel("Energy (E)")
+        ax.set_ylabel("Distribution Function n(E)")
+        ax.set_title(f"Distributions at T = {T:.2f} K and μ = {mu:.2f}")
+        ax.legend()
+        ax.grid(True)
+
+        # Set y-axis limits
+        ax.set_ylim(0, 2)
+
+        # Redraw the canvas
+        canvas.draw()
+
+    # Create the main window
+    root = tk.Tk()
+    root.title("Distribution Functions: Maxwell-Boltzmann, Fermi-Dirac, Bose-Einstein")
+    root.state('zoomed')
+
+    # Create a figure and axis for the plot
+    fig, ax = plt.subplots(figsize=(8, 6))
+    plt.tight_layout(pad=1.0)
+
+    # Embed the plot into the Tkinter window
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+    # Frame to hold sliders in a grid format
+    frame_sliders = ttk.Frame(root)
+    frame_sliders.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
+
+    # Temperature (T) slider
+    frame_T = ttk.Frame(frame_sliders)
+    frame_T.grid(row=0, column=0, padx=5, pady=5)
+    ttk.Label(frame_T, text="Temperature (T) [K]:").grid(row=0, column=0, sticky="w")
+    slider_T = ttk.Scale(frame_T, from_=0, to=10.0, orient=tk.HORIZONTAL, length=550, command=update_plot)
+    slider_T.set(initial_T)
+    slider_T.grid(row=0, column=1, sticky="w")
+    current_T = tk.StringVar()
+    current_T.set(f"T = {initial_T:.2f} K")
+    ttk.Label(frame_T, textvariable=current_T).grid(row=0, column=2, sticky="w", padx=10)
+
+    # Alpha (α) slider
+    frame_alpha = ttk.Frame(frame_sliders)
+    frame_alpha.grid(row=0, column=1, padx=5, pady=5)
+    ttk.Label(frame_alpha, text="Alpha (α):").grid(row=0, column=0, sticky="w")
+    slider_alpha = ttk.Scale(frame_alpha, from_=0, to=3.0, orient=tk.HORIZONTAL, length=550, command=update_plot)
+    slider_alpha.set(initial_alpha)
+    slider_alpha.grid(row=0, column=1, sticky="w")
+    current_alpha = tk.StringVar()
+    current_alpha.set(f"α = {initial_alpha:.2f}")
+    ttk.Label(frame_alpha, textvariable=current_alpha).grid(row=0, column=2, sticky="w", padx=10)
+
+    # Initial plot update
+    update_plot()
+
+    # Start the main loop
+    root.mainloop()
 
 
 
@@ -1235,36 +1330,37 @@ def open_window_free_electron_gas():
 # Main application window
 root = tk.Tk()
 root.title("Quantum Animations")
-#root.geometry("300x200")
 root.state('zoomed')
 
-# Create buttons
-button_a = ttk.Button(root, text="Infinite Square Well", width=40, command=open_window_infinitesquarewell)
-button_a.pack(pady=20, ipadx=20, ipady=10)
+# Create a frame to hold the buttons
+button_frame = ttk.Frame(root)
+button_frame.pack(pady=20)
 
-button_b = ttk.Button(root, text="Harmonic Oscialltor", width=40, command=open_window_HO)
-button_b.pack(pady=20, ipadx=20, ipady=10)
+# List of button configurations: (row, column, text, command)
+buttons = [
+    (0, 0, "Infinite Square Well", open_window_infinitesquarewell),
+    (0, 1, "Harmonic Oscillator", open_window_HO),
+    (0, 2, "Delta Dirac Potential Well Bound State", open_window_delta_dirac_2D),
+    (0, 3, "Delta Dirac Potential Well Scattering State", open_window_delta_scatter),
+    (0, 4, "Legendre Polynomials", open_window_legendre_poly),
+    (1, 0, "Associated Legendre Polynomials", open_window_associated_legendre_poly),
+    (1, 1, "Spherical Harmonics", open_window_spherical_harmonics),
+    (1, 2, "Quantum Tunneling", open_window_tunneling),
+    (1, 3, "Free Electron Gas", open_window_free_electron_gas),
+    (1, 4, "Distributions", open_window_distribution_functions)
+]
 
-button_c = ttk.Button(root, text="Delta Dirac Potential Well Bound State",width=40, command=open_window_delta_dirac_2D)
-button_c.pack(pady=20, ipadx=20, ipady=10)
+# Create and place buttons in the grid
+for row, col, text, command in buttons:
+    button = ttk.Button(button_frame, text=text, width=40, command=command)
+    button.grid(row=row, column=col, padx=10, pady=10, ipadx=20, ipady=10, sticky="nsew")
 
-button_d = ttk.Button(root, text="Delta Dirac Potential Well Scattering State", width=40, command=open_window_delta_scatter)
-button_d.pack(pady=20, ipadx=20, ipady=10)
-
-button_e = ttk.Button(root, text="Legendre Polynomials", width=40, command=open_window_legendre_poly)
-button_e.pack(pady=20, ipadx=20, ipady=10)
-
-button_f = ttk.Button(root, text="Associated Legendre Polynomials", width=40, command=open_window_associated_legendre_poly)
-button_f.pack(pady=20, ipadx=20, ipady=10)
-
-button_g = ttk.Button(root, text="Spherical Harmonics", width=40, command=open_window_spherical_harmonics)
-button_g.pack(pady=20, ipadx=20, ipady=10)
-
-button_g = ttk.Button(root, text="Quantum Tunneling", width=40, command=open_window_tunneling)
-button_g.pack(pady=20, ipadx=20, ipady=10)
-
-button_h = ttk.Button(root, text="Free Electron Gas", width=40, command=open_window_free_electron_gas)
-button_h.pack(pady=20, ipadx=20, ipady=10)
+# Configure grid to ensure uniform button sizes
+for i in range(5):  # 5 columns
+    button_frame.grid_columnconfigure(i, weight=1)
+for i in range(2):  # 2 rows
+    button_frame.grid_rowconfigure(i, weight=1)
 
 # Start the tkinter event loop
 root.mainloop()
+
